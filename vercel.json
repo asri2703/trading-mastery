@@ -1,0 +1,11 @@
+{
+  "name": "gh-landing",
+  "version": 2,
+  "framework": "vanilla",
+  "buildCommand": "",
+  "outputDirectory": ".",
+  "rewrites": [
+    { "source": "/api/checkout", "destination": "/api/checkout/index.js" },
+    { "source": "/api/webhook", "destination": "/api/webhook/index.js" }
+  ]
+}
