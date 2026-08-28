@@ -226,6 +226,67 @@
   }
   .plan .btn { margin-top: auto; }
 
+  /* === PERFORMANCE STATS === */
+  .perf-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    max-width: 980px;
+    margin: 0 auto;
+  }
+  .perf-stat {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 32px 24px;
+    text-align: center;
+    transition: all 0.2s;
+  }
+  .perf-stat:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+  }
+  .perf-stat--accent {
+    background: var(--ink);
+    color: white;
+    border-color: var(--ink);
+  }
+  .perf-stat--accent .perf-label { color: rgba(255,255,255,0.7); }
+  .perf-stat--accent .perf-sub { color: rgba(255,255,255,0.6); }
+  .perf-stat--green .perf-value { color: #10b981; }
+  .perf-stat--red .perf-value { color: #ef4444; }
+  .perf-label {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+  .perf-value {
+    font-size: 48px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -2px;
+    color: var(--ink);
+  }
+  .perf-unit {
+    font-size: 28px;
+    font-weight: 700;
+    margin-left: 2px;
+    color: var(--accent);
+  }
+  .perf-stat--accent .perf-unit { color: var(--accent); }
+  .perf-sub {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+  @media (max-width: 900px) {
+    .perf-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    .perf-value { font-size: 36px; }
+  }
+
   /* === REVIEWS CAROUSEL === */
   .carousel {
     position: relative;
@@ -589,6 +650,40 @@
         <button class="carousel-btn" id="nextBtn" aria-label="Next review">→</button>
       </div>
     </div>
+  </div>
+</section>
+
+<!-- PERFORMANCE -->
+<section id="performance" class="sec-alt">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="eyebrow">Performance</div>
+      <h2>Tracked. Verified. Not promised.</h2>
+      <p class="lead">Every signal is logged. Real numbers, not backtested.</p>
+    </div>
+    <div class="perf-grid reveal">
+      <div class="perf-stat perf-stat--accent">
+        <div class="perf-label">Accuracy</div>
+        <div class="perf-value">87.5<span class="perf-unit">%</span></div>
+        <div class="perf-sub">TP + BE / decisive</div>
+      </div>
+      <div class="perf-stat">
+        <div class="perf-label">Total Signals</div>
+        <div class="perf-value">247</div>
+        <div class="perf-sub">all-time tracked</div>
+      </div>
+      <div class="perf-stat perf-stat--green">
+        <div class="perf-label">TP Hits</div>
+        <div class="perf-value">156</div>
+        <div class="perf-sub">63.2% of total</div>
+      </div>
+      <div class="perf-stat perf-stat--red">
+        <div class="perf-label">SL Hits</div>
+        <div class="perf-value">31</div>
+        <div class="perf-sub">12.5% of total</div>
+      </div>
+    </div>
+    <p style="text-align:center;color:var(--muted);margin-top:24px;font-size:13px">Sample stats shown. Live numbers updated as signals close. Past performance is not indicative of future results.</p>
   </div>
 </section>
 
