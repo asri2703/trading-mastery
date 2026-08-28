@@ -1136,8 +1136,8 @@
       <form id="ghform" style="margin-top:24px">
         <label>TradingView Username *</label>
         <input name="tv_username" required placeholder="e.g. john_gold">
-        <label>Telegram or Email *</label>
-        <input name="contact" required placeholder="@john or john@mail.com">
+        <label>Telegram Username *</label>
+        <input name="telegram" required placeholder="@john">
         <input type="hidden" name="plan" id="planfield" value="flex">
         <button class="btn btn-primary btn-block" type="submit" id="paybtn" style="margin-top:24px">Pay $29</button>
         <p style="font-size:13px;color:var(--muted);margin-top:14px">After payment, we grant Trading Mastery to your TradingView username within 24 hours and send your Telegram invite.</p>
@@ -1402,12 +1402,12 @@
     btn.disabled = true;
     const plan = document.getElementById('planfield').value;
     const tv_username = this.tv_username.value.trim();
-    const contact = this.contact.value.trim();
+    const telegram = this.telegram.value.trim();
     try {
       const res = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan, tv_username, contact }),
+        body: JSON.stringify({ plan, tv_username, telegram }),
       });
       const data = await res.json();
       if (data.url) {

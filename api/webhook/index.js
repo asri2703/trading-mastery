@@ -1,72 +1,212 @@
 // Gold Hunter — Stripe Webhook + Telegram Notify (Vercel Edge Function)
-// File: api/webhook/index.js  →  route: /api/webhook
+// File: api/webhook/index.js → route: /api/webhook
 // Stripe calls this on checkout.session.completed.
-// We: 1) mark order paid in Supabase, 2) DM owner via @masterycommunity bot (NOT group post).
+// We: 1) verify HMAC sig, 2) mark paid in Supabase, 3) DM owner + post to channel with action buttons
 
 export const config = { runtime: 'edge' };
 
-const PLAN_NAMES = { A: 'Indicator Only ($50)', B: 'Indicator + Coaching ($250)', C: 'Full Package ($500)' };
+// Plan display names
+const PLAN_DISPLAY = {
+  flex: 'Flex ($29 · 1 Month)',
+  plus: 'Plus ($75 · 3 Months · $25/mo)',
+  pro: 'Pro ($132 · 6 Months · $22/mo)',
+};
+
+const PLAN_EMOJI = {
+  flex: '🥉',
+  plus: '🥈',
+  pro: '🥇',
+};
+
+// HMAC-SHA256 verification helper for Stripe signature
+async function verifyStripeSignature(body, sigHeader, secret) {
+  if (!sigHeader || !secret) return false;
+
+  // Stripe sig format: t=timestamp,v1=signature[,v1=signature...]
+  const parts = sigHeader.split(',').reduce((acc, p) => {
+    const [k, v] = p.split('=');
+    acc[k] = v;
+    return acc;
+  }, {});
+  const timestamp = parts.t;
+  const v1 = parts.v1;
+  if (!timestamp || !v1) return false;
+
+  // Construct signed payload
+  const signedPayload = `${timestamp}.${body}`;
+
+  // Compute HMAC-SHA256
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(signedPayload));
+  const expected = Array.from(new Uint8Array(signature))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+
+  // Constant-time compare (avoid timing attacks)
+  if (expected.length !== v1.length) return false;
+  let result = 0;
+  for (let i = 0; i < expected.length; i++) {
+    result |= expected.charCodeAt(i) ^ v1.charCodeAt(i);
+  }
+  return result === 0;
+}
 
 export default async function handler(req) {
-  if (req.method !== 'POST') return new Response('no', { status: 405 });
+  if (req.method !== 'POST') return new Response('method not allowed', { status: 405 });
 
   const stripeKey = process.env.STRIPE_SECRET_KEY;
   const whSecret = process.env.STRIPE_WEBHOOK_SECRET;
   const supabaseUrl = process.env.SUPABASE_URL;
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  const tgToken = process.env.TG_BOT_TOKEN;       // @masterycommunity bot token
-  const tgOwnerChat = process.env.TG_OWNER_CHAT;  // owner's private chat id (DM, NOT group)
+  const ghBotToken = process.env.GH_BOT_TOKEN;
+  const ownerChatId = process.env.OWNER_CHAT_ID;
+  const channelId = process.env.GH_CHANNEL_ID;
 
-  const sig = req.headers.get('stripe-signature');
+  if (!stripeKey || !whSecret || !supabaseUrl || !supabaseKey || !ghBotToken) {
+    return new Response('server misconfigured', { status: 500 });
+  }
+
+  // Get raw body for HMAC verification
   const body = await req.text();
+  const sig = req.headers.get('stripe-signature');
 
-  // Verify signature
-  const cryptoRes = await fetch('https://api.stripe.com/v1/webhooks/verify', {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${stripeKey}` },
-  }).catch(() => null);
+  // Verify HMAC signature
+  const valid = await verifyStripeSignature(body, sig, whSecret);
+  if (!valid) {
+    console.error('Invalid Stripe signature');
+    return new Response('invalid signature', { status: 400 });
+  }
 
-  // NOTE: proper signature verification needs HMAC-SHA256; for Edge we use Stripe's
-  // recommended lib in production. Here we parse event directly (secure via webhook secret header check).
   let event;
   try {
     event = JSON.parse(body);
   } catch (e) {
-    return new Response('bad json', { status: 400 });
+    return new Response('invalid json', { status: 400 });
   }
 
-  if (event.type === 'checkout.session.completed') {
-    const sess = event.data.object;
-    const meta = sess.metadata || {};
-    const plan = meta.plan;
-    const tv = meta.tv_username;
-    const contact = meta.contact;
-    const orderId = meta.order_id;
+  // Only process successful checkout
+  if (event.type !== 'checkout.session.completed') {
+    return new Response('ignored', { status: 200 });
+  }
 
-    // 1) Mark paid in Supabase
-    await fetch(`${supabaseUrl}/rest/v1/gh_orders?id=eq.${orderId}`, {
-      method: 'PATCH',
-      headers: {
-        'apikey': supabaseKey,
-        'Authorization': `Bearer ${supabaseKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ status: 'paid', stripe_payment_intent: sess.payment_intent }),
-    });
+  const session = event.data.object;
+  const meta = session.metadata || {};
+  const orderId = meta.order_id;
+  const plan = meta.plan;
+  const tv = meta.tv_username;
+  const telegram = meta.telegram;
+  const durationDays = parseInt(meta.duration_days || '30', 10);
 
-    // 2) Notify owner via Telegram DM (bot sends to OWNER chat id, NOT group)
-    const msg =
-      `🚨 NEW GH SALE\n` +
-      `Plan: ${PLAN_NAMES[plan] || plan}\n` +
-      `TV Username: @${tv}\n` +
-      `Contact: ${contact}\n` +
-      `Payment: ✅ confirmed\n` +
-      `Order: ${orderId}\n\n` +
-      `→ Grant Gold Hunter access, then DM client.`;
-    await fetch(`https://api.telegram.org/bot${tgToken}/sendMessage`, {
+  if (!orderId || !plan || !tv || !telegram) {
+    return new Response('missing metadata', { status: 400 });
+  }
+
+  // 1) Update order status → paid
+  const patchRes = await fetch(`${supabaseUrl}/rest/v1/gh_orders?id=eq.${orderId}`, {
+    method: 'PATCH',
+    headers: {
+      'apikey': supabaseKey,
+      'Authorization': `Bearer ${supabaseKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      status: 'paid',
+      stripe_payment_intent: session.payment_intent,
+      paid_at: new Date().toISOString(),
+    }),
+  });
+
+  if (!patchRes.ok) {
+    const err = await patchRes.text();
+    console.error('Supabase update failed:', err);
+    return new Response('db update failed', { status: 500 });
+  }
+
+  // 2) Log activity
+  await fetch(`${supabaseUrl}/rest/v1/gh_activity`, {
+    method: 'POST',
+    headers: {
+      'apikey': supabaseKey,
+      'Authorization': `Bearer ${supabaseKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      order_id: orderId,
+      action: 'payment_received',
+      actor: 'stripe_webhook',
+      details: { session_id: session.id, payment_intent: session.payment_intent },
+    }),
+  });
+
+  // 3) Build notification message
+  const orderShort = orderId.substring(0, 8);
+  const message =
+    `${PLAN_EMOJI[plan] || '🆕'} NEW ORDER #${orderShort}\n` +
+    `\n` +
+    `Plan: ${PLAN_DISPLAY[plan] || plan}\n` +
+    `Amount: $${(session.amount_total / 100).toFixed(2)} USD\n` +
+    `\n` +
+    `TradingView: @${tv}\n` +
+    `Telegram: @${telegram}\n` +
+    `\n` +
+    `Order ID: ${orderId}\n` +
+    `Status: ⏳ Paid (awaiting access grant)\n` +
+    `\n` +
+    `→ Grant Trading Mastery access to @${tv} on TradingView`;
+
+  // 4) Send to Telegram channel with action buttons
+  if (channelId) {
+    const channelRes = await fetch(`https://api.telegram.org/bot${ghBotToken}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: tgOwnerChat, text: msg }),
+      body: JSON.stringify({
+        chat_id: channelId,
+        text: message,
+        reply_markup: {
+          inline_keyboard: [
+            [
+              { text: '✅ Confirm', callback_data: `gh:confirm:${orderId}` },
+              { text: '❌ Cancel', callback_data: `gh:cancel:${orderId}` },
+            ],
+            [{ text: '📋 Order Details', callback_data: `gh:details:${orderId}` }],
+          ],
+        },
+      }),
+    });
+
+    if (channelRes.ok) {
+      const channelData = await channelRes.json();
+      const msgId = channelData.result?.message_id;
+      if (msgId) {
+        await fetch(`${supabaseUrl}/rest/v1/gh_orders?id=eq.${orderId}`, {
+          method: 'PATCH',
+          headers: {
+            'apikey': supabaseKey,
+            'Authorization': `Bearer ${supabaseKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ group_msg_id: msgId }),
+        });
+      }
+    }
+  }
+
+  // 5) DM owner (private chat)
+  if (ownerChatId) {
+    await fetch(`https://api.telegram.org/bot${ghBotToken}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: ownerChatId,
+        text: '🔔 ' + message,
+      }),
     });
   }
 
