@@ -190,6 +190,7 @@
   .plan.featured {
     border-color: var(--accent);
     box-shadow: 0 0 0 1px var(--accent), var(--shadow-md);
+    background: var(--accent-light);
   }
   .plan .badge {
     position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
@@ -208,7 +209,31 @@
     font-size: 56px; font-weight: 800; line-height: 1;
     margin: 16px 0 4px; letter-spacing: -2px;
   }
-  .plan .price-note { font-size: 14px; color: var(--muted); }
+  .price-currency {
+    font-size: 32px; font-weight: 700;
+    vertical-align: 8px;
+    margin-right: 2px;
+    color: var(--ink);
+  }
+  .plan.featured .price-currency { color: var(--accent); }
+  .price-period {
+    font-size: 15px; font-weight: 600;
+    color: var(--muted);
+    letter-spacing: 0;
+    margin-left: 4px;
+  }
+  .plan.featured .price-period { color: var(--ink-soft); }
+  .price-note { font-size: 14px; color: var(--muted); }
+  .plan.featured .price-note { color: var(--ink-soft); }
+  .price-save {
+    display: inline-block;
+    background: var(--accent);
+    color: white;
+    font-size: 12px; font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 999px;
+    margin-top: 10px;
+  }
   .plan .total {
     font-size: 13px; color: var(--muted);
     margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line);
@@ -823,7 +848,7 @@
         <div class="name">Flex</div>
         <div class="duration">1 Month Access</div>
         <div class="price">$29</div>
-        <div class="price-note">one-time</div>
+        <div class="price-note">one-time payment</div>
         <ul>
           <li>Trading Mastery indicator</li>
           <li>Granted to your TradingView username</li>
@@ -836,8 +861,9 @@
         <div class="badge">Best Value</div>
         <div class="name">Plus</div>
         <div class="duration">3 Months Access</div>
-        <div class="price">$75</div>
-        <div class="price-note">$25/mo · one-time</div>
+        <div class="price"><span class="price-currency">$</span>25<span class="price-period">/ month</span></div>
+        <div class="price-note">Billed $75 every 3 months</div>
+        <div class="price-save">Save $12 vs monthly</div>
         <ul>
           <li>Everything in Flex</li>
           <li>3 months of signal history access</li>
@@ -849,8 +875,9 @@
       <div class="plan reveal">
         <div class="name">Pro</div>
         <div class="duration">6 Months Access</div>
-        <div class="price">$132</div>
-        <div class="price-note">$22/mo · one-time</div>
+        <div class="price"><span class="price-currency">$</span>22<span class="price-period">/ month</span></div>
+        <div class="price-note">Billed $132 every 6 months</div>
+        <div class="price-save">Save $42 vs monthly</div>
         <ul>
           <li>Everything in Plus</li>
           <li>6 months of signal history access</li>
