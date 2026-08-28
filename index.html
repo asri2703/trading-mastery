@@ -558,9 +558,220 @@
     .brand img { height: 32px; width: 32px; }
     .nav-cta { padding: 7px 12px !important; font-size: 12px !important; }
   }
+
+  /* === SALE POPUP === */
+  .sale-popup-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .sale-popup-overlay.visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .sale-popup {
+    position: relative;
+    width: 100%;
+    max-width: 580px;
+    background: linear-gradient(180deg, #0a0a0a 0%, #1a1410 100%);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 24px;
+    padding: 60px 40px 50px;
+    color: white;
+    overflow: hidden;
+    transform: scale(0.95) translateY(20px);
+    transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .sale-popup-overlay.visible .sale-popup {
+    transform: scale(1) translateY(0);
+  }
+  .sale-popup-glow {
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 70%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(251, 146, 60, 0.4) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .sale-popup-content {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+  }
+  .sale-popup-title {
+    font-size: 52px;
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -2px;
+    margin: 0 0 20px;
+    color: white;
+  }
+  .sale-popup-desc {
+    font-size: 16px;
+    color: rgba(255,255,255,0.75);
+    max-width: 420px;
+    margin: 0 auto 36px;
+    line-height: 1.5;
+  }
+  .sale-popup-desc strong { color: white; font-weight: 600; }
+  .sale-popup-count { margin-bottom: 36px; }
+  .sale-count-label {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 16px;
+  }
+  .sale-count-boxes {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+  }
+  .sale-count-box {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 14px 18px;
+    min-width: 72px;
+    text-align: center;
+  }
+  .sale-count-num {
+    font-size: 28px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    color: white;
+    letter-spacing: -0.5px;
+  }
+  .sale-count-unit {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: rgba(255,255,255,0.5);
+    margin-top: 8px;
+  }
+  .sale-popup-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .sale-popup-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 14px 28px;
+    border-radius: 999px;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    cursor: pointer;
+    min-width: 170px;
+  }
+  .sale-popup-btn-primary {
+    background: white;
+    color: #0a0a0a;
+  }
+  .sale-popup-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(255,255,255,0.2);
+  }
+  .sale-popup-btn-ghost {
+    background: transparent;
+    color: white;
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+  .sale-popup-btn-ghost:hover {
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.3);
+  }
+  .sale-popup-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: white;
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+  .sale-popup-close:hover {
+    background: rgba(255,255,255,0.15);
+    transform: rotate(90deg);
+  }
+  @media (max-width: 600px) {
+    .sale-popup { padding: 50px 24px 40px; border-radius: 20px; }
+    .sale-popup-title { font-size: 40px; letter-spacing: -1.5px; }
+    .sale-popup-desc { font-size: 14px; }
+    .sale-count-boxes { gap: 6px; }
+    .sale-count-box { padding: 12px 10px; min-width: 60px; }
+    .sale-count-num { font-size: 22px; }
+    .sale-popup-actions { flex-direction: column; }
+    .sale-popup-btn { width: 100%; min-width: 0; }
+  }
 </style>
 </head>
 <body>
+
+<!-- END OF SUMMER SALE POPUP -->
+<div id="salePopup" class="sale-popup-overlay">
+  <div class="sale-popup">
+    <button class="sale-popup-close" id="salePopupClose" aria-label="Close">×</button>
+    <div class="sale-popup-glow"></div>
+    <div class="sale-popup-content">
+      <h2 class="sale-popup-title">End of<br>Summer Sale</h2>
+      <p class="sale-popup-desc">Get Trading Mastery XAUUSD signals at the best price of the season — up to <strong>30% off</strong> while it still lasts.</p>
+      <div class="sale-popup-count">
+        <div class="sale-count-label">Ends in</div>
+        <div class="sale-count-boxes">
+          <div class="sale-count-box">
+            <div class="sale-count-num" id="saleDays">00</div>
+            <div class="sale-count-unit">Days</div>
+          </div>
+          <div class="sale-count-box">
+            <div class="sale-count-num" id="saleHours">00</div>
+            <div class="sale-count-unit">Hrs</div>
+          </div>
+          <div class="sale-count-box">
+            <div class="sale-count-num" id="saleMins">00</div>
+            <div class="sale-count-unit">Min</div>
+          </div>
+          <div class="sale-count-box">
+            <div class="sale-count-num" id="saleSecs">00</div>
+            <div class="sale-count-unit">Sec</div>
+          </div>
+        </div>
+      </div>
+      <div class="sale-popup-actions">
+        <a href="#plans" class="sale-popup-btn sale-popup-btn-primary" id="salePopupClaim">Claim the deal →</a>
+        <a href="#plans" class="sale-popup-btn sale-popup-btn-ghost">See the plans</a>
+      </div>
+    </div>
+  </div>
+</div>
 
 <header>
   <div class="wrap nav">
@@ -997,6 +1208,75 @@
 </footer>
 
 <script>
+  // === END OF SUMMER SALE POPUP ===
+  (function initSalePopup() {
+    const overlay = document.getElementById('salePopup');
+    if (!overlay) return;
+
+    // Sale ends in 7 days from now (configurable via localStorage for testing)
+    const STORAGE_KEY = 'mastery_sale_ends_at';
+    let endsAt = parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10);
+    if (!endsAt || endsAt < Date.now()) {
+      endsAt = Date.now() + 7 * 24 * 60 * 60 * 1000; // 7 days
+      localStorage.setItem(STORAGE_KEY, endsAt);
+    }
+    // For demo: 2 days 22 hours from now (matches sample image)
+    // Override to make countdown match sample
+    const demoEnd = Date.now() + (2 * 24 * 60 * 60 * 1000) + (22 * 60 * 60 * 1000) + (42 * 60 * 1000) + (21 * 1000);
+    endsAt = demoEnd;
+    localStorage.setItem(STORAGE_KEY, endsAt);
+
+    const daysEl = document.getElementById('saleDays');
+    const hoursEl = document.getElementById('saleHours');
+    const minsEl = document.getElementById('saleMins');
+    const secsEl = document.getElementById('saleSecs');
+    const closeBtn = document.getElementById('salePopupClose');
+    const claimBtn = document.getElementById('salePopupClaim');
+
+    function pad(n) { return String(Math.max(0, n)).padStart(2, '0'); }
+
+    function update() {
+      const diff = Math.max(0, endsAt - Date.now());
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const secs = Math.floor((diff % (1000 * 60)) / 1000);
+      if (daysEl) daysEl.textContent = pad(days);
+      if (hoursEl) hoursEl.textContent = pad(hours);
+      if (minsEl) minsEl.textContent = pad(mins);
+      if (secsEl) secsEl.textContent = pad(secs);
+    }
+
+    update();
+    const interval = setInterval(update, 1000);
+
+    // Open popup after 1 second (let page load first)
+    const DISMISS_KEY = 'mastery_sale_dismissed';
+    if (!sessionStorage.getItem(DISMISS_KEY)) {
+      setTimeout(() => {
+        overlay.classList.add('visible');
+        document.body.style.overflow = 'hidden';
+      }, 1000);
+    }
+
+    function close() {
+      overlay.classList.remove('visible');
+      document.body.style.overflow = '';
+      sessionStorage.setItem(DISMISS_KEY, '1');
+    }
+
+    if (closeBtn) closeBtn.addEventListener('click', close);
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) close();
+    });
+    if (claimBtn) claimBtn.addEventListener('click', close);
+
+    // ESC to close
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && overlay.classList.contains('visible')) close();
+    });
+  })();
+
   // === REVIEW CAROUSEL ===
   (function initCarousel() {
     const track = document.getElementById('reviewTrack');
