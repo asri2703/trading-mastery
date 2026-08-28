@@ -226,6 +226,136 @@
   }
   .plan .btn { margin-top: auto; }
 
+  /* === REVIEWS CAROUSEL === */
+  .carousel {
+    position: relative;
+    max-width: 1080px;
+    margin: 0 auto;
+    overflow: hidden;
+  }
+  .carousel-track {
+    display: flex;
+    transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    gap: 20px;
+  }
+  .review-card {
+    flex: 0 0 calc(33.333% - 14px);
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 28px 26px;
+    display: flex;
+    flex-direction: column;
+    min-height: 240px;
+    transition: box-shadow 0.2s, border-color 0.2s;
+  }
+  .review-card:hover {
+    box-shadow: var(--shadow-md);
+    border-color: var(--accent);
+  }
+  .review-stars {
+    color: #00b67a;
+    font-size: 20px;
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+  }
+  .review-card h4 {
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    color: var(--ink);
+    line-height: 1.3;
+  }
+  .review-card p {
+    font-size: 14.5px;
+    line-height: 1.6;
+    color: var(--muted);
+    margin-bottom: 18px;
+    flex: 1;
+  }
+  .review-author {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-top: 14px;
+    border-top: 1px solid var(--line);
+  }
+  .review-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--accent-light);
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 15px;
+    flex-shrink: 0;
+  }
+  .review-author strong {
+    display: block;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.2;
+  }
+  .review-meta {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .carousel-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 36px;
+  }
+  .carousel-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: white;
+    border: 1.5px solid var(--line);
+    color: var(--ink);
+    font-size: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .carousel-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-light);
+  }
+  .carousel-dots {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .carousel-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--line);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .carousel-dot.active {
+    background: var(--accent);
+    width: 24px;
+    border-radius: 4px;
+  }
+
+  @media (max-width: 900px) {
+    .review-card { flex: 0 0 calc(100% - 0px); }
+    .carousel-track { gap: 16px; }
+  }
+
   /* === INDICATOR SCREENSHOT === */
   .indicator-screenshot {
     max-width: 760px;
@@ -364,6 +494,91 @@
           <div>SL<strong>4,636.62</strong></div>
           <div>R:R<strong>1:2</strong></div>
         </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- REVIEWS -->
+<section id="reviews">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="eyebrow">Reviews</div>
+      <h2>Trusted by traders.</h2>
+      <p class="lead">Real feedback from real users. Verified on Trustpilot.</p>
+      <div style="margin-top:16px">
+        <a href="https://www.trustpilot.com/review/masterylab.pro" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;color:var(--muted);font-size:14px;text-decoration:underline">
+          ★ ★ ★ ★ ★ &nbsp;5.0 on Trustpilot →
+        </a>
+      </div>
+    </div>
+    <div class="carousel reveal">
+      <div class="carousel-track" id="reviewTrack">
+        <div class="review-card">
+          <div class="review-stars">★★★★★</div>
+          <h4>"It's was super nice"</h4>
+          <p>It's was super nice, easy to use, help me how to monitor trading, good for beginner trader, thanks for master lab.</p>
+          <div class="review-author">
+            <div class="review-avatar" style="background:#10b981">D</div>
+            <div>
+              <strong>Dzulk Jtx</strong>
+              <div class="review-meta">MY · 1 review · May 30, 2026</div>
+            </div>
+          </div>
+        </div>
+        <div class="review-card">
+          <div class="review-stars">★★★★★</div>
+          <h4>"Legit and powerful indicator"</h4>
+          <p>Legit and powerful indicator. Works exactly as described.</p>
+          <div class="review-author">
+            <div class="review-avatar" style="background:#d1fae5;color:#065f46">AI</div>
+            <div>
+              <strong>Amer Ikmal Hisham Bin Zulkarna</strong>
+              <div class="review-meta">MY · 2 reviews · May 30, 2026</div>
+            </div>
+          </div>
+        </div>
+        <div class="review-card">
+          <div class="review-stars">★★★★★</div>
+          <h4>"Very nice indicator and helpful"</h4>
+          <p>Very nice indicator and helpful, I recommend for all newbie.</p>
+          <div class="review-author">
+            <div class="review-avatar" style="background:#0891b2">L</div>
+            <div>
+              <strong>Long Jack</strong>
+              <div class="review-meta">MY · 1 review · May 30, 2026</div>
+            </div>
+          </div>
+        </div>
+        <div class="review-card">
+          <div class="review-stars">★★★★★</div>
+          <h4>"Very supportive and informative"</h4>
+          <p>I am new here.. very supportive and informative 🙂</p>
+          <div class="review-author">
+            <div class="review-avatar" style="background:#0891b2">R</div>
+            <div>
+              <strong>Ragupathy Xavier</strong>
+              <div class="review-meta">MY · 1 review · May 30, 2026</div>
+            </div>
+          </div>
+        </div>
+        <div class="review-card">
+          <div class="review-stars">★★★★★</div>
+          <h4>"Excellent. nice & awesome 👍"</h4>
+          <p>Excellent.. nice & awesome 👍</p>
+          <div class="review-author">
+            <div class="review-avatar" style="background:#fce7f3;color:#9f1239">FY</div>
+            <div>
+              <strong>Fitri Yusuf</strong>
+              <div class="review-meta">MY · 1 review · May 19, 2026</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="carousel-nav">
+        <button class="carousel-btn" id="prevBtn" aria-label="Previous review">←</button>
+        <div class="carousel-dots" id="carouselDots"></div>
+        <button class="carousel-btn" id="nextBtn" aria-label="Next review">→</button>
       </div>
     </div>
   </div>
@@ -636,6 +851,87 @@
 </footer>
 
 <script>
+  // === REVIEW CAROUSEL ===
+  (function initCarousel() {
+    const track = document.getElementById('reviewTrack');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const dotsContainer = document.getElementById('carouselDots');
+    if (!track || !prevBtn || !nextBtn) return;
+
+    const cards = track.querySelectorAll('.review-card');
+    const totalCards = cards.length;
+    // Visible cards per breakpoint (desktop 3, mobile 1)
+    const getVisible = () => window.innerWidth <= 900 ? 1 : 3;
+    let visible = getVisible();
+    let currentIndex = 0;
+    // Max scroll index
+    const getMaxIndex = () => Math.max(0, totalCards - visible);
+
+    // Build dots
+    function buildDots() {
+      dotsContainer.innerHTML = '';
+      const totalDots = getMaxIndex() + 1;
+      for (let i = 0; i < totalDots; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'carousel-dot' + (i === currentIndex ? ' active' : '');
+        dot.addEventListener('click', () => goTo(i));
+        dotsContainer.appendChild(dot);
+      }
+    }
+
+    function updateCarousel() {
+      const card = cards[0];
+      const cardWidth = card.offsetWidth;
+      const gap = 20;
+      const offset = currentIndex * (cardWidth + gap);
+      track.style.transform = `translateX(-${offset}px)`;
+      // Update dots
+      dotsContainer.querySelectorAll('.carousel-dot').forEach((d, i) => {
+        d.classList.toggle('active', i === currentIndex);
+      });
+    }
+
+    function goTo(idx) {
+      currentIndex = Math.max(0, Math.min(idx, getMaxIndex()));
+      updateCarousel();
+    }
+
+    prevBtn.addEventListener('click', () => goTo(currentIndex - 1));
+    nextBtn.addEventListener('click', () => goTo(currentIndex + 1));
+
+    // Auto-advance every 5 seconds
+    let auto = setInterval(() => {
+      const maxIdx = getMaxIndex();
+      currentIndex = currentIndex >= maxIdx ? 0 : currentIndex + 1;
+      updateCarousel();
+    }, 5000);
+
+    // Pause on hover
+    track.parentElement.addEventListener('mouseenter', () => clearInterval(auto));
+    track.parentElement.addEventListener('mouseleave', () => {
+      auto = setInterval(() => {
+        const maxIdx = getMaxIndex();
+        currentIndex = currentIndex >= maxIdx ? 0 : currentIndex + 1;
+        updateCarousel();
+      }, 5000);
+    });
+
+    // Handle resize
+    window.addEventListener('resize', () => {
+      const newVisible = getVisible();
+      if (newVisible !== visible) {
+        visible = newVisible;
+        currentIndex = Math.min(currentIndex, getMaxIndex());
+        buildDots();
+        updateCarousel();
+      }
+    });
+
+    buildDots();
+    updateCarousel();
+  })();
+
   // === SCROLL REVEAL ANIMATIONS (motion.dev style) ===
   const observer = new IntersectionObserver((entries) => {
     entries.forEach((entry, i) => {
