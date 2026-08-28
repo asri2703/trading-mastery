@@ -231,7 +231,11 @@
     position: relative;
     max-width: 1080px;
     margin: 0 auto;
+    padding: 0 60px;  /* Space for nav arrows on desktop */
+  }
+  .carousel-viewport {
     overflow: hidden;
+    width: 100%;
   }
   .carousel-track {
     display: flex;
@@ -239,7 +243,8 @@
     gap: 20px;
   }
   .review-card {
-    flex: 0 0 calc(33.333% - 14px);
+    flex: 0 0 calc((100% - 40px) / 3);
+    box-sizing: border-box;
     background: white;
     border: 1px solid var(--line);
     border-radius: 14px;
@@ -352,8 +357,9 @@
   }
 
   @media (max-width: 900px) {
-    .review-card { flex: 0 0 calc(100% - 0px); }
-    .carousel-track { gap: 16px; }
+    .carousel { padding: 0 16px; }
+    .review-card { flex: 0 0 100%; }
+    .carousel-track { gap: 12px; }
   }
 
   /* === INDICATOR SCREENSHOT === */
@@ -513,7 +519,8 @@
       </div>
     </div>
     <div class="carousel reveal">
-      <div class="carousel-track" id="reviewTrack">
+      <div class="carousel-viewport">
+        <div class="carousel-track" id="reviewTrack">
         <div class="review-card">
           <div class="review-stars">★★★★★</div>
           <h4>"It's was super nice"</h4>
@@ -574,6 +581,7 @@
             </div>
           </div>
         </div>
+      </div>
       </div>
       <div class="carousel-nav">
         <button class="carousel-btn" id="prevBtn" aria-label="Previous review">←</button>
@@ -883,7 +891,8 @@
     function updateCarousel() {
       const card = cards[0];
       const cardWidth = card.offsetWidth;
-      const gap = 20;
+      const styles = window.getComputedStyle(track);
+      const gap = parseFloat(styles.gap) || 0;
       const offset = currentIndex * (cardWidth + gap);
       track.style.transform = `translateX(-${offset}px)`;
       // Update dots
