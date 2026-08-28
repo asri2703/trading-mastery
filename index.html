@@ -94,13 +94,24 @@
   }
   .nav {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 18px 0;
+    padding: 18px 0; gap: 16px;
   }
-  .brand { display: flex; align-items: center; gap: 12px; font-weight: 800; font-size: 17px; letter-spacing: -0.3px; }
-  .brand img { height: 48px; width: 48px; }
-  .navlinks { display: flex; gap: 32px; font-size: 14.5px; font-weight: 500; }
+  .brand {
+    display: flex; align-items: center; gap: 10px;
+    font-weight: 800; font-size: 16px; letter-spacing: -0.3px;
+    flex-shrink: 0;
+  }
+  .brand img { height: 44px; width: 44px; }
+  .brand-text { white-space: nowrap; }
+  .nav-spacer { flex: 1; }
+  .navlinks { display: flex; gap: 28px; font-size: 14.5px; font-weight: 500; }
   .navlinks a { color: var(--ink-soft); transition: color 0.15s; }
   .navlinks a:hover { color: var(--accent); }
+  .nav-cta {
+    flex-shrink: 0;
+    padding: 10px 18px !important;
+    font-size: 14px !important;
+  }
 
   /* === HERO === */
   section { padding: 100px 0; }
@@ -542,6 +553,10 @@
     .hero-grid { gap: 40px; }
     section { padding: 60px 0; }
     .hero { padding: 60px 0; }
+    .nav { padding: 14px 0; gap: 12px; }
+    .brand { font-size: 14px; gap: 8px; }
+    .brand img { height: 36px; width: 36px; }
+    .nav-cta { padding: 8px 14px !important; font-size: 13px !important; }
   }
 </style>
 </head>
@@ -560,7 +575,7 @@
       <a href="#plans">Plans</a>
       <a href="#faq">FAQ</a>
     </nav>
-    <a href="#plans" class="btn btn-primary">Get Access</a>
+    <a href="#plans" class="btn btn-primary nav-cta">Get Access</a>
   </div>
 </header>
 
