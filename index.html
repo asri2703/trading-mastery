@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MasteryLab — Gold Hunter XAUUSD Signals for TradingView</title>
-<meta name="description" content="Gold Hunter: automated XAUUSD BUY/SELL signals with TP/SL, granted to your TradingView username. Lifetime-style access, one-time payment.">
+<title>MasteryLab — Trading Mastery XAUUSD Signals for TradingView</title>
+<meta name="description" content="Trading Mastery: TradingView indicator with dashboard confirmations, entry/SL/TP signals, 0-7 scoring, multi-timeframe, all instruments. One-time payment.">
 <link rel="icon" type="image/png" href="assets/masterylab_logo_small.png">
 <style>
   /* === MOTION.DEV DESIGN LANGUAGE ===
@@ -226,6 +226,85 @@
   }
   .plan .btn { margin-top: auto; }
 
+  /* === DASHBOARD PREVIEW === */
+  .dash-wrap {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 40px;
+    align-items: center;
+    max-width: 880px;
+    margin: 0 auto;
+  }
+  .dash-card {
+    background: white;
+    border: 2px solid var(--ink);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+  }
+  .dash-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-bottom: 1px solid var(--line);
+  }
+  .dash-row:last-child { border-bottom: none; }
+  .dash-cell {
+    padding: 14px 20px;
+    font-size: 14.5px;
+    font-weight: 600;
+  }
+  .dash-cell:first-child { border-right: 1px solid var(--line); }
+  .dash-head {
+    background: var(--ink);
+    color: white;
+    text-align: center;
+    font-weight: 800;
+    letter-spacing: 1px;
+    font-size: 13px;
+    text-transform: uppercase;
+  }
+  .dash-red { color: #ef4444; font-weight: 700; }
+  .dash-red-strong { color: #ef4444; font-weight: 800; }
+  .dash-orange { color: #f59e0b; font-weight: 700; }
+  .dash-green { color: #10b981; font-weight: 700; }
+  .dash-muted { color: var(--muted); font-weight: 500; }
+
+  .dash-signal {
+    background: #ef4444;
+    border-radius: 14px;
+    padding: 28px;
+    color: white;
+    box-shadow: var(--shadow-lg);
+  }
+  .sig-badge {
+    background: rgba(255,255,255,0.18);
+    color: white;
+    font-weight: 800;
+    font-size: 18px;
+    text-align: center;
+    padding: 10px 14px;
+    border-radius: 8px;
+    margin-bottom: 18px;
+  }
+  .sig-meta {
+    font-size: 16px;
+    font-weight: 600;
+    padding: 6px 0;
+    color: white;
+  }
+  .rr {
+    display: inline-block;
+    background: rgba(255,255,255,0.18);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    margin-left: 4px;
+  }
+
+  @media (max-width: 720px) {
+    .dash-wrap { grid-template-columns: 1fr; gap: 24px; }
+  }
+
   /* === FORM === */
   .formsec { background: var(--bg-alt); }
   .formcard {
@@ -316,6 +395,7 @@
     </a>
     <nav class="navlinks">
       <a href="#how">How It Works</a>
+      <a href="#dashboard">Dashboard</a>
       <a href="#features">Features</a>
       <a href="#plans">Plans</a>
       <a href="#faq">FAQ</a>
@@ -329,8 +409,8 @@
   <div class="wrap hero-grid">
     <div class="reveal">
       <div class="eyebrow">XAUUSD Signals · TradingView Indicator</div>
-      <h1>Gold Hunter. Signals that respect your time.</h1>
-      <p class="lead" style="margin-top:24px">Clean BUY/SELL alerts with TP1, TP2, TP3 and SL levels — auto-posted to your Telegram the moment they fire. We grant access directly to your TradingView username. No files. No install.</p>
+      <h1>Trading Mastery. Decisions made clearer.</h1>
+      <p class="lead" style="margin-top:24px">A full dashboard on every chart — Mastery Trend, Wave, Volume, Status and Buy/Sell score — with complete Entry, Stop Loss, TP1 and TP2. One indicator. Any timeframe. Any instrument.</p>
       <div class="hero-actions">
         <a href="#plans" class="btn btn-primary">View Plans</a>
         <a href="#how" class="btn btn-ghost">How It Works</a>
@@ -338,14 +418,14 @@
     </div>
     <div class="hero-visual reveal">
       <div class="signal-card">
-        <div class="pair">XAUUSD · M15</div>
-        <div class="dir buy">BUY ↑</div>
-        <div style="font-size:13px;color:var(--muted);margin-top:4px">@ 2,485.30</div>
+        <div class="pair">XAUUSD · 1H · TRADING MASTERY</div>
+        <div class="dir sell">SELL ↓ · 5/7.0</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:4px">Entry @ 4,602.145</div>
         <div class="levels">
-          <div>TP1<strong>2,495</strong></div>
-          <div>TP2<strong>2,505</strong></div>
-          <div>SL<strong>2,478</strong></div>
-          <div>R:R<strong>1:1.6</strong></div>
+          <div>TP1<strong>4,567.67</strong></div>
+          <div>TP2<strong>4,533.20</strong></div>
+          <div>SL<strong>4,636.62</strong></div>
+          <div>R:R<strong>1:2</strong></div>
         </div>
       </div>
     </div>
@@ -374,7 +454,7 @@
       <div class="step reveal">
         <div class="step-num">3</div>
         <h3>Get access</h3>
-        <p>Within 24 hours, Gold Hunter is granted to your TradingView username and your Telegram invite arrives.</p>
+        <p>Within 24 hours, Trading Mastery is granted to your TradingView username and your Telegram invite arrives.</p>
       </div>
     </div>
   </div>
@@ -389,28 +469,78 @@
     </div>
     <div class="features">
       <div class="feat reveal">
-        <div class="feat-icon">★</div>
-        <div><strong>XAUUSD-focused</strong><p>One pair. One job. No indicators fighting each other.</p></div>
-      </div>
-      <div class="feat reveal">
-        <div class="feat-icon">⚡</div>
-        <div><strong>Instant alerts</strong><p>Signals post to Telegram the second they fire — with chart screenshot.</p></div>
-      </div>
-      <div class="feat reveal">
-        <div class="feat-icon">●</div>
-        <div><strong>Auto TP / SL</strong><p>Every signal includes entry, TP1/TP2/TP3 and stop loss. Calculated risk-reward.</p></div>
-      </div>
-      <div class="feat reveal">
-        <div class="feat-icon">⌘</div>
-        <div><strong>Username-grant access</strong><p>No script files. We add Gold Hunter directly to your TradingView account.</p></div>
-      </div>
-      <div class="feat reveal">
-        <div class="feat-icon">⌗</div>
-        <div><strong>Multi-timeframe</strong><p>Scalping (M5/M15) and intraday (H1/H4) setups covered.</p></div>
+        <div class="feat-icon">◆</div>
+        <div><strong>Dashboard confirmations</strong><p>Mastery Trend, Wave, Volume, Status & Buy/Sell Score — all on one panel before you enter.</p></div>
       </div>
       <div class="feat reveal">
         <div class="feat-icon">⊕</div>
-        <div><strong>Tracked, not promised</strong><p>Every signal is logged. Performance is real, not backtested.</p></div>
+        <div><strong>Complete entry, SL & TP</strong><p>Every signal includes entry price, stop loss, TP1 and TP2 — with risk-reward ratios.</p></div>
+      </div>
+      <div class="feat reveal">
+        <div class="feat-icon">✓</div>
+        <div><strong>Signal score 0–7</strong><p>Each setup is scored out of 7. Trade only when score confirms — or skip with confidence.</p></div>
+      </div>
+      <div class="feat reveal">
+        <div class="feat-icon">⌗</div>
+        <div><strong>Multi-timeframe</strong><p>M5, M15, M30, H1, H4 — scalping to intraday setups, all on one indicator.</p></div>
+      </div>
+      <div class="feat reveal">
+        <div class="feat-icon">●</div>
+        <div><strong>All instruments</strong><p>XAUUSD, BTCUSD, US30, forex pairs — works on any asset TradingView supports.</p></div>
+      </div>
+      <div class="feat reveal">
+        <div class="feat-icon">⌘</div>
+        <div><strong>Username-grant access</strong><p>No script files. We add Trading Mastery directly to your TradingView account.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- INDICATOR DASHBOARD PREVIEW -->
+<section id="dashboard" class="sec-alt">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="eyebrow">Dashboard</div>
+      <h2>Everything you need, one panel.</h2>
+      <p class="lead">A real signal, the way Trading Mastery plots it.</p>
+    </div>
+    <div class="dash-wrap reveal">
+      <div class="dash-card">
+        <div class="dash-row">
+          <div class="dash-cell dash-head">TRADING MASTERY</div>
+          <div class="dash-cell dash-head">DASHBOARD</div>
+        </div>
+        <div class="dash-row">
+          <div class="dash-cell">Mastery Trend</div>
+          <div class="dash-cell dash-red">BEARISH</div>
+        </div>
+        <div class="dash-row">
+          <div class="dash-cell">Mastery Wave</div>
+          <div class="dash-cell dash-orange">WAVE 2 OR 4</div>
+        </div>
+        <div class="dash-row">
+          <div class="dash-cell">Mastery Volume</div>
+          <div class="dash-cell dash-green">BUYERS +1037</div>
+        </div>
+        <div class="dash-row">
+          <div class="dash-cell">Signal Status</div>
+          <div class="dash-cell dash-muted">WAITING</div>
+        </div>
+        <div class="dash-row">
+          <div class="dash-cell">Buy Score</div>
+          <div class="dash-cell dash-muted">0/7.0</div>
+        </div>
+        <div class="dash-row">
+          <div class="dash-cell">Sell Score</div>
+          <div class="dash-cell dash-red-strong">5/7.0</div>
+        </div>
+      </div>
+      <div class="dash-signal reveal">
+        <div class="sig-badge sig-sell">GAMMA SELL (5/7.0)</div>
+        <div class="sig-meta">Entry: 4602.145</div>
+        <div class="sig-meta">SL: 4636.6161</div>
+        <div class="sig-meta">TP1: 4567.6739 <span class="rr">[1:1]</span></div>
+        <div class="sig-meta">TP2: 4533.2029 <span class="rr">[1:2]</span></div>
       </div>
     </div>
   </div>
@@ -431,7 +561,7 @@
         <div class="price">$29</div>
         <div class="price-note">one-time</div>
         <ul>
-          <li>Gold Hunter indicator</li>
+          <li>Trading Mastery indicator</li>
           <li>Granted to your TradingView username</li>
           <li>Telegram signal channel access</li>
           <li>Auto TP/SL on every signal</li>
@@ -483,7 +613,7 @@
         <input name="contact" required placeholder="@john or john@mail.com">
         <input type="hidden" name="plan" id="planfield" value="flex">
         <button class="btn btn-primary btn-block" type="submit" id="paybtn" style="margin-top:24px">Pay $29</button>
-        <p style="font-size:13px;color:var(--muted);margin-top:14px">After payment, we grant Gold Hunter to your TradingView username within 24 hours and send your Telegram invite.</p>
+        <p style="font-size:13px;color:var(--muted);margin-top:14px">After payment, we grant Trading Mastery to your TradingView username within 24 hours and send your Telegram invite.</p>
       </form>
     </div>
   </div>
@@ -510,7 +640,7 @@
       <div class="step reveal">
         <div class="step-num">✓</div>
         <h3>Access granted</h3>
-        <p>Within 24h, Gold Hunter is granted to your username. Telegram invite arrives.</p>
+        <p>Within 24h, Trading Mastery is granted to your username. Telegram invite arrives.</p>
       </div>
     </div>
   </div>
@@ -524,11 +654,11 @@
       <h2>Frequently asked</h2>
     </div>
     <div class="faq">
-      <details class="reveal"><summary>Do I need TradingView Premium?</summary><p>No. Gold Hunter works on the free TradingView plan.</p></details>
-      <details class="reveal"><summary>How do I receive signals?</summary><p>After access is granted, you're invited to the Gold Hunter Telegram channel where every signal posts automatically with chart screenshot.</p></details>
+      <details class="reveal"><summary>Do I need TradingView Premium?</summary><p>No. Trading Mastery works on the free TradingView plan.</p></details>
+      <details class="reveal"><summary>How do I receive signals?</summary><p>After access is granted, you're invited to the Trading Mastery Telegram channel where every signal posts automatically with chart screenshot.</p></details>
       <details class="reveal"><summary>How does the one-time payment work?</summary><p>Pay once for the duration you choose (1, 3, or 6 months). No auto-deductions, no subscription. After the period ends, you can renew at the same price.</p></details>
       <details class="reveal"><summary>What if I entered the wrong username?</summary><p>Contact us via Telegram before we grant access and we'll update it.</p></details>
-      <details class="reveal"><summary>Do you offer refunds?</summary><p>Gold Hunter is a digital access product. All sales are final. If access fails to deliver within 48h, full refund available.</p></details>
+      <details class="reveal"><summary>Do you offer refunds?</summary><p>Trading Mastery is a digital access product. All sales are final. If access fails to deliver within 48h, full refund available.</p></details>
       <details class="reveal"><summary>Can I pay with Indian payment methods?</summary><p>Yes. Stripe accepts international cards, UPI, and Google Pay.</p></details>
     </div>
   </div>

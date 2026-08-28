@@ -1,7 +1,5 @@
 {
-  "name": "gh-landing",
   "version": 2,
-  "framework": "vanilla",
   "buildCommand": "",
   "outputDirectory": ".",
   "rewrites": [
