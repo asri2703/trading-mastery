@@ -226,83 +226,20 @@
   }
   .plan .btn { margin-top: auto; }
 
-  /* === DASHBOARD PREVIEW === */
-  .dash-wrap {
-    display: grid;
-    grid-template-columns: 1.2fr 1fr;
-    gap: 40px;
-    align-items: center;
-    max-width: 880px;
-    margin: 0 auto;
-  }
-  .dash-card {
+  /* === INDICATOR SCREENSHOT === */
+  .indicator-screenshot {
+    max-width: 760px;
+    margin: 40px auto 0;
     background: white;
-    border: 2px solid var(--ink);
-    border-radius: 14px;
+    border: 1px solid var(--line);
+    border-radius: 16px;
     overflow: hidden;
     box-shadow: var(--shadow-lg);
   }
-  .dash-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    border-bottom: 1px solid var(--line);
-  }
-  .dash-row:last-child { border-bottom: none; }
-  .dash-cell {
-    padding: 14px 20px;
-    font-size: 14.5px;
-    font-weight: 600;
-  }
-  .dash-cell:first-child { border-right: 1px solid var(--line); }
-  .dash-head {
-    background: var(--ink);
-    color: white;
-    text-align: center;
-    font-weight: 800;
-    letter-spacing: 1px;
-    font-size: 13px;
-    text-transform: uppercase;
-  }
-  .dash-red { color: #ef4444; font-weight: 700; }
-  .dash-red-strong { color: #ef4444; font-weight: 800; }
-  .dash-orange { color: #f59e0b; font-weight: 700; }
-  .dash-green { color: #10b981; font-weight: 700; }
-  .dash-muted { color: var(--muted); font-weight: 500; }
-
-  .dash-signal {
-    background: #ef4444;
-    border-radius: 14px;
-    padding: 28px;
-    color: white;
-    box-shadow: var(--shadow-lg);
-  }
-  .sig-badge {
-    background: rgba(255,255,255,0.18);
-    color: white;
-    font-weight: 800;
-    font-size: 18px;
-    text-align: center;
-    padding: 10px 14px;
-    border-radius: 8px;
-    margin-bottom: 18px;
-  }
-  .sig-meta {
-    font-size: 16px;
-    font-weight: 600;
-    padding: 6px 0;
-    color: white;
-  }
-  .rr {
-    display: inline-block;
-    background: rgba(255,255,255,0.18);
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 12px;
-    margin-left: 4px;
-  }
-
-  @media (max-width: 720px) {
-    .dash-wrap { grid-template-columns: 1fr; gap: 24px; }
+  .indicator-screenshot img {
+    width: 100%;
+    height: auto;
+    display: block;
   }
 
   /* === FORM === */
@@ -496,52 +433,22 @@
   </div>
 </section>
 
-<!-- INDICATOR DASHBOARD PREVIEW -->
+<!-- INDICATOR PREVIEW -->
 <section id="dashboard" class="sec-alt">
   <div class="wrap">
     <div class="sec-head reveal">
-      <div class="eyebrow">Dashboard</div>
-      <h2>Everything you need, one panel.</h2>
-      <p class="lead">A real signal, the way Trading Mastery plots it.</p>
+      <div class="eyebrow">Indicator</div>
+      <h2>See it on a live chart.</h2>
+      <p class="lead">Trading Mastery plotting XAUUSD · 1H · real dashboard, real signal markers.</p>
+      <div style="margin-top:24px">
+        <a href="https://www.tradingview.com/script/ZlVJrXHQ-TRADING-MASTERY/" target="_blank" rel="noopener" class="btn btn-primary">
+          <svg width="16" height="16" viewBox="0 0 16 16" style="margin-right:8px;vertical-align:middle" fill="currentColor"><path d="M8 1l2 4 4 .6-3 2.9.7 4.2L8 10.6 4.3 12.7 5 8.5 2 5.6 6 5z"/></svg>
+          Preview on TradingView
+        </a>
+      </div>
     </div>
-    <div class="dash-wrap reveal">
-      <div class="dash-card">
-        <div class="dash-row">
-          <div class="dash-cell dash-head">TRADING MASTERY</div>
-          <div class="dash-cell dash-head">DASHBOARD</div>
-        </div>
-        <div class="dash-row">
-          <div class="dash-cell">Mastery Trend</div>
-          <div class="dash-cell dash-red">BEARISH</div>
-        </div>
-        <div class="dash-row">
-          <div class="dash-cell">Mastery Wave</div>
-          <div class="dash-cell dash-orange">WAVE 2 OR 4</div>
-        </div>
-        <div class="dash-row">
-          <div class="dash-cell">Mastery Volume</div>
-          <div class="dash-cell dash-green">BUYERS +1037</div>
-        </div>
-        <div class="dash-row">
-          <div class="dash-cell">Signal Status</div>
-          <div class="dash-cell dash-muted">WAITING</div>
-        </div>
-        <div class="dash-row">
-          <div class="dash-cell">Buy Score</div>
-          <div class="dash-cell dash-muted">0/7.0</div>
-        </div>
-        <div class="dash-row">
-          <div class="dash-cell">Sell Score</div>
-          <div class="dash-cell dash-red-strong">5/7.0</div>
-        </div>
-      </div>
-      <div class="dash-signal reveal">
-        <div class="sig-badge sig-sell">GAMMA SELL (5/7.0)</div>
-        <div class="sig-meta">Entry: 4602.145</div>
-        <div class="sig-meta">SL: 4636.6161</div>
-        <div class="sig-meta">TP1: 4567.6739 <span class="rr">[1:1]</span></div>
-        <div class="sig-meta">TP2: 4533.2029 <span class="rr">[1:2]</span></div>
-      </div>
+    <div class="indicator-screenshot reveal">
+      <img src="assets/indicator-preview.jpg" alt="Trading Mastery indicator on XAUUSD 1H chart">
     </div>
   </div>
 </section>
