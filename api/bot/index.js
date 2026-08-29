@@ -303,10 +303,12 @@ export default async function handler(req) {
 
   // Route knowledge base callbacks (from DM menu buttons)
   const data = callbackQuery.data || '';
+  console.log('[KB-CALLBACK]', { data, from: callbackQuery.from?.username });
   if (data.startsWith('kb_')) {
     const cbId = callbackQuery.id;
     const kbResp = KB_MAP[data] || KB_MENU.en;
     const cbChatId = callbackQuery.message?.chat?.id;
+    console.log('[KB-CALLBACK] responding', { cbChatId, kbResp_text_length: kbResp.text?.length });
 
     if (cbId) {
       await fetch(`https://api.telegram.org/bot${ghBotToken}/answerCallbackQuery`, {
@@ -316,7 +318,7 @@ export default async function handler(req) {
       });
     }
     if (cbChatId) {
-      await fetch(`https://api.telegram.org/bot${ghBotToken}/sendMessage`, {
+      const sendRes = await fetch(`https://api.telegram.org/bot${ghBotToken}/sendMessage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -327,6 +329,8 @@ export default async function handler(req) {
           reply_markup: kbResp.buttons ? { inline_keyboard: kbResp.buttons } : undefined,
         }),
       });
+      const sendData = await sendRes.json();
+      console.log('[KB-CALLBACK] sendMessage result', { ok: sendRes.ok, description: sendData.description });
     }
     return new Response('ok', { status: 200 });
   }
