@@ -1433,6 +1433,74 @@
       btn.textContent = 'Pay $' + ({flex:'29',plus:'75',pro:'132'}[plan]);
     }
   });
+
+  // ===== POST-PAYMENT SUCCESS HANDLER =====
+  (function handlePaymentReturn() {
+    const params = new URLSearchParams(window.location.search);
+    const orderId = params.get('order');
+    const portalOpen = params.get('portal') === 'open';
+    const portalClosed = params.get('portal') === 'closed';
+    const canceled = params.get('canceled') === '1';
+
+    if (orderId && (params.get('paid') === '1' || canceled)) {
+      // Show a simple success banner
+      const banner = document.createElement('div');
+      banner.style.cssText = 'position:fixed;top:0;left:0;right:0;padding:24px 20px;text-align:center;z-index:10000;font-family:system-ui;font-size:15px;font-weight:600;box-shadow:0 4px 20px rgba(0,0,0,0.15);';
+      if (canceled) {
+        banner.style.background = '#fef3c7';
+        banner.style.color = '#92400e';
+        banner.innerHTML = '⚠️ Payment canceled. Your order is on hold — DM @thegoldhunterbot if you need help. <button onclick="this.parentElement.remove()" style="margin-left:16px;background:transparent;border:1px solid #92400e;padding:4px 12px;border-radius:6px;cursor:pointer;color:#92400e">×</button>';
+      } else {
+        banner.style.background = 'linear-gradient(135deg,#10b981,#059669)';
+        banner.style.color = 'white';
+        banner.innerHTML = '✅ Payment received! We\'re processing your Trading Mastery access. You\'ll get a Telegram message within 24 hours. <button onclick="this.parentElement.remove()" style="margin-left:16px;background:rgba(255,255,255,0.2);border:1px solid white;padding:4px 12px;border-radius:6px;cursor:pointer;color:white">×</button>';
+      }
+      document.body.insertBefore(banner, document.body.firstChild);
+      // Auto-hide after 15s
+      setTimeout(() => banner.remove(), 15000);
+    }
+
+    if (portalOpen) {
+      // Open customer portal automatically
+      // We need order ID — look at query string
+      const orderId = params.get('order');
+      if (orderId) {
+        fetch(`/api/customer-portal?order_id=${orderId}`)
+          .then(r => r.json())
+          .then(data => {
+            if (data.url) {
+              window.location.href = data.url;
+            } else {
+              alert('Could not open portal: ' + (data.error || 'unknown'));
+            }
+          })
+          .catch(e => alert('Network error opening portal: ' + e.message));
+      } else {
+        // No order ID — prompt for email
+        const email = prompt('Enter your email to view your invoices:');
+        if (email) {
+          fetch(`/api/customer-portal?email=${encodeURIComponent(email)}`)
+            .then(r => r.json())
+            .then(data => {
+              if (data.url) {
+                window.location.href = data.url;
+              } else {
+                alert('No customer found for this email. Make sure you used it at checkout.');
+              }
+            });
+        }
+      }
+    }
+
+    if (portalClosed) {
+      // Just show "thanks" message
+      const banner = document.createElement('div');
+      banner.style.cssText = 'position:fixed;top:0;left:0;right:0;padding:16px 20px;text-align:center;z-index:10000;font-family:system-ui;font-size:14px;background:#3b5cd4;color:white;';
+      banner.innerHTML = '✓ Portal closed. Need anything else? <a href="https://t.me/thegoldhunterbot" style="color:white;text-decoration:underline">DM us</a>';
+      document.body.insertBefore(banner, document.body.firstChild);
+      setTimeout(() => banner.remove(), 5000);
+    }
+  })();
 </script>
 </body>
 </html>

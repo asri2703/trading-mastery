@@ -22,6 +22,7 @@ const KB_WELCOME = {
       [{ text: '📦 How to install indicator', callback_data: 'kb_install' }],
       [{ text: '🧾 My order status', callback_data: 'kb_order_status' }],
       [{ text: '💬 Contact human support', callback_data: 'kb_contact' }],
+      [{ text: '🧾 Manage Invoices', url: 'https://gh-landing-bay.vercel.app/?portal=open' }],
     ],
   },
 };
@@ -45,8 +46,8 @@ const KB_INSTALL = {
       `👉 https://www.tradingview.com/\n\n` +
       `*Step 2* — Add the indicator (Invite-only)\n` +
       `1. Click the *fx (Indicators)* button at top toolbar\n` +
-      `2. Click *\"Invite-only scripts\"* tab\n` +
-      `3. Search for *\"Trading Mastery\"* or *\"TRADING-MASTERY\"*\n` +
+      `2. Click *"Invite-only scripts"* tab\n` +
+      `3. Search for *"Trading Mastery"* or *"TRADING-MASTERY"*\n` +
       `4. Click to add to chart\n\n` +
       `*Step 3* — Choose instrument & timeframe\n` +
       `• XAUUSD / BTCUSD / US30 / FX pairs\n` +
@@ -59,8 +60,15 @@ const KB_INSTALL = {
       `0-2 = No trade\n` +
       `3-4 = Wait\n` +
       `5+ = Valid entry (with confirmation)\n\n` +
+      `*📖 Full tutorial with screenshots:*\n` +
+      `👉 ${TUTORIAL_URL}\n\n` +
       `Need more help? Type your question here or use the menu.`,
-    buttons: [[{ text: '🔙 Back to menu', callback_data: 'kb_menu' }]],
+    buttons: [
+      [
+        { text: '📖 Full Tutorial', url: TUTORIAL_URL },
+      ],
+      [{ text: '🔙 Back to menu', callback_data: 'kb_menu' }],
+    ],
   },
 };
 
@@ -158,6 +166,8 @@ const PLAN_EMOJI = {
 };
 
 // Install instructions for TradingView invite-only access
+const TUTORIAL_URL = 'https://telegra.ph/How-to-Install-Trading-Mastery-Indicator--Quick-Tutorial-08-29';
+
 const INSTALL_INSTRUCTIONS = (tvUsername, planName, planDuration) =>
   `🎉 *Welcome to Trading Mastery!*\n\n` +
   `Your ${planName} is now ACTIVE (${planDuration}).\n\n` +
@@ -193,6 +203,9 @@ const INSTALL_INSTRUCTIONS = (tvUsername, planName, planDuration) =>
   `Got questions? DM @thegoldhunterbot — auto-reply will assist with installation.\n\n` +
   `Or join our signals community for live trades:\n` +
   `👉 https://t.me/masterysignalcommunity\n\n` +
+  `*📖 FULL TUTORIAL*\n` +
+  `Step-by-step guide with screenshots:\n` +
+  `👉 ${TUTORIAL_URL}\n\n` +
   `Happy trading! 🚀`;
 
 // Generate structured receipt as text

@@ -85,7 +85,9 @@ export default async function handler(req) {
     'line_items[0][price_data][product_data][description]': `Indicator access for TradingView @${cleanTv} (${PLANS[plan].duration_days} days)`,
     'line_items[0][price_data][unit_amount]': String(PLANS[plan].price),
     'line_items[0][quantity]': '1',
-    // Metadata for webhook to identify order
+    // Always create Stripe customer (needed for customer portal — invoice access)
+    'customer_creation': 'always',
+    // Session metadata (for webhook to identify order)
     'metadata[order_id]': order.id,
     'metadata[plan]': plan,
     'metadata[tv_username]': cleanTv,
@@ -94,7 +96,6 @@ export default async function handler(req) {
     'success_url': `${origin}/?paid=1&order=${order.id}`,
     'cancel_url': `${origin}/?canceled=1&order=${order.id}`,
     'automatic_tax[enabled]': 'false',
-    // Only set receipt_email when email is valid (Stripe rejects empty string)
   };
   // If email provided, pre-fill checkout + auto-send receipt
   if (cleanEmail) {
