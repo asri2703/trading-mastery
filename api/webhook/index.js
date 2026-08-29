@@ -103,6 +103,7 @@ export default async function handler(req) {
   const tv = meta.tv_username;
   const telegram = meta.telegram;
   const durationDays = parseInt(meta.duration_days || '30', 10);
+  const customerEmail = session.customer_email || session.customer_details?.email || session.receipt_email || null;
 
   if (!orderId || !plan || !tv || !telegram) {
     return new Response('missing metadata', { status: 400 });
@@ -120,6 +121,8 @@ export default async function handler(req) {
       status: 'paid',
       stripe_payment_intent: session.payment_intent,
       paid_at: new Date().toISOString(),
+      // Save email from Stripe session if not already in form
+      ...(customerEmail ? { email: customerEmail } : {}),
     }),
   });
 
@@ -155,6 +158,7 @@ export default async function handler(req) {
     `\n` +
     `TradingView: @${tv}\n` +
     `Telegram: @${telegram}\n` +
+    (customerEmail ? `Email: ${customerEmail}\n` : '') +
     `\n` +
     `Order ID: ${orderId}\n` +
     `Status: ⏳ Paid (awaiting access grant)\n` +
