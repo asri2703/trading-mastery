@@ -4,10 +4,12 @@
 // Purpose: Receive TradingView webhook alerts (Pine Script JSON) and auto-post
 //          to Telegram channel @getfreegoldsignal using bot @thegoldhunterbot.
 //
-// Flow: TradingView indicator → webhook → this endpoint → Telegram channel
+// FLOW: TradingView indicator → webhook → this endpoint → Telegram channel
+// BOSS uses this on a SEPARATE TradingView account (not the masterysignal one).
+// NO chart screenshots — simple text-based signal post in GH style.
 //
-// Boss runs this on a SEPARATE TradingView account (not the masterysignal one).
-// No chart screenshots — simple text-based signal post in GH style.
+// FILTER: Only M15, M30, H1 timeframes allowed (boss explicit).
+// DEDUP: 30-min window per (direction, entry, timeframe) tuple.
 //
 // Pine Script alert message format (JSON):
 //   {
@@ -15,7 +17,7 @@
 //     "signal": "TRADING MASTERY GAMMA BUY",
 //     "direction": "BUY",
 //     "pair": "XAUUSD",
-//     "timeframe": "5",
+//     "timeframe": "15",
 //     "score": "6.5",
 //     "entry": "4383.50",
 //     "sl": "4365.00",
@@ -35,8 +37,12 @@ const TG_CHANNEL_ID = process.env.GH_CHANNEL_ID; // -1004466635373 (Gold Hunter 
 // Webhook secret — boss sets this in Pine Script alert AND Vercel env
 const WEBHOOK_SECRET = process.env.GH_SIGNAL_SECRET || 'trading-mastery-2026';
 
+// ALLOWED timeframes (boss filter: M15, M30, H1 only — boss explicit)
+const ALLOWED_TIMEFRAMES = ['15', '30', '60'];
+const TF_LABELS = { '15': 'M15', '30': 'M30', '60': 'H1' };
+
 // State dedup (avoid duplicate posts if TV retries)
-const DEDUP_WINDOW_MS = 5 * 60 * 1000; // 5 minutes
+const DEDUP_WINDOW_MS = 30 * 60 * 1000; // 30 minutes
 const recentSignals = new Map(); // key: signal hash → {ts, msg_id}
 
 // ============ Helper: Build signal caption (GH style) ============
@@ -44,7 +50,8 @@ const recentSignals = new Map(); // key: signal hash → {ts, msg_id}
 function buildSignalCaption(sig) {
   const direction = (sig.direction || '').toUpperCase();
   const pair = sig.pair || 'XAUUSD';
-  const tf = sig.timeframe || '';
+  const tfCode = String(sig.timeframe || '');
+  const tf = TF_LABELS[tfCode] || (tfCode ? `M${tfCode}` : '');
   const score = parseFloat(sig.score) || 0;
   const entry = parseFloat(sig.entry) || 0;
   const sl = parseFloat(sig.sl) || 0;
@@ -97,7 +104,7 @@ function buildSignalCaption(sig) {
   let cap = '';
   cap += `🥇 *GOLD HUNTER SIGNAL* 🚨\n\n`;
   cap += `${dirEmoji} *${direction} ${signalLabel.replace('TRADING MASTERY ', '')}*\n`;
-  cap += `${pairEmoji} ${pair}${tf ? ` · M${tf}` : ''}\n`;
+  cap += `${pairEmoji} ${pair}${tf ? ` · *${tf}*` : ''}\n`;
   if (score > 0) cap += `💯 Score: ${score.toFixed(1)}/7.0\n`;
   cap += `\n`;
 
@@ -268,6 +275,17 @@ module.exports = async (req, res) => {
       return res.status(400).json({
         error: 'missing_fields',
         hint: 'direction and entry are required'
+      });
+    }
+
+    // Validate timeframe — boss filter: only M15, M30, H1 allowed
+    const tf = String(body.timeframe || '');
+    if (!ALLOWED_TIMEFRAMES.includes(tf)) {
+      return res.status(403).json({
+        error: 'timeframe_not_allowed',
+        timeframe: tf,
+        allowed: ALLOWED_TIMEFRAMES.map(t => TF_LABELS[t] || t),
+        hint: `Only ${ALLOWED_TIMEFRAMES.map(t => TF_LABELS[t] || t).join(', ')} allowed. Boss filter excludes other timeframes.`
       });
     }
 
