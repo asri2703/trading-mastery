@@ -4,6 +4,7 @@
   "outputDirectory": ".",
   "rewrites": [
     { "source": "/api/checkout", "destination": "/api/checkout/index.js" },
-    { "source": "/api/webhook", "destination": "/api/webhook/index.js" }
+    { "source": "/api/webhook", "destination": "/api/webhook/index.js" },
+    { "source": "/api/bot", "destination": "/api/bot/index.js" }
   ]
 }
