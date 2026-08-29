@@ -1,12 +1,149 @@
-// Gold Hunter — Bot Callback Handler (Vercel Edge Function)
+// Gold Hunter — Bot Handler (Vercel Edge Function)
 // File: api/bot/index.js → route: /api/bot
-// Handles button clicks from channel @ordermasterylab
-// Patterns:
-//   gh:confirm:<order_id> → mark order as processed, DM client tutorial
-//   gh:cancel:<order_id>  → mark order as cancelled
-//   gh:details:<order_id> → show order details
+// Handles:
+//   1) Button clicks from channel @ordermasterylab
+//      gh:confirm:<order_id> → mark processed, DM client receipt+install
+//      gh:cancel:<order_id>  → mark cancelled
+//      gh:details:<order_id> → show order details
+//   2) DM messages to bot → auto-reply with knowledge base
+//      /start, /menu, /install, free text → FAQ keyword match
+//      Internal callbacks: install, menu, order_status, contact_support
 
 export const config = { runtime: 'edge' };
+
+// === KNOWLEDGE BASE FOR DM AUTO-REPLY ===
+const KB_WELCOME = {
+  en: {
+    text:
+      `👋 *Welcome to Gold Hunter Support!*\n\n` +
+      `I'm here to help you with your *Trading Mastery* indicator.\n\n` +
+      `*What can I help you with?*`,
+    buttons: [
+      [{ text: '📦 How to install indicator', callback_data: 'kb_install' }],
+      [{ text: '🧾 My order status', callback_data: 'kb_order_status' }],
+      [{ text: '💬 Contact human support', callback_data: 'kb_contact' }],
+    ],
+  },
+};
+
+const KB_MENU = {
+  en: {
+    text: `📋 *MAIN MENU*\n\nHow can I help you today?`,
+    buttons: [
+      [{ text: '📦 How to install indicator', callback_data: 'kb_install' }],
+      [{ text: '🧾 My order status', callback_data: 'kb_order_status' }],
+      [{ text: '💬 Contact human support', callback_data: 'kb_contact' }],
+    ],
+  },
+};
+
+const KB_INSTALL = {
+  en: {
+    text:
+      `*📦 HOW TO INSTALL TRADING MASTERY*\n\n` +
+      `*Step 1* — Open TradingView\n` +
+      `👉 https://www.tradingview.com/\n\n` +
+      `*Step 2* — Add the indicator (Invite-only)\n` +
+      `1. Click the *fx (Indicators)* button at top toolbar\n` +
+      `2. Click *\"Invite-only scripts\"* tab\n` +
+      `3. Search for *\"Trading Mastery\"* or *\"TRADING-MASTERY\"*\n` +
+      `4. Click to add to chart\n\n` +
+      `*Step 3* — Choose instrument & timeframe\n` +
+      `• XAUUSD / BTCUSD / US30 / FX pairs\n` +
+      `• Scalping → M15\n` +
+      `• Intraday → H1\n` +
+      `• Swing → H4\n\n` +
+      `*Step 4* — Wait for signal\n` +
+      `Trade only when score ≥ *5/7.0*\n\n` +
+      `*Signal Score:*\n` +
+      `0-2 = No trade\n` +
+      `3-4 = Wait\n` +
+      `5+ = Valid entry (with confirmation)\n\n` +
+      `Need more help? Type your question here or use the menu.`,
+    buttons: [[{ text: '🔙 Back to menu', callback_data: 'kb_menu' }]],
+  },
+};
+
+const KB_ORDER_STATUS = {
+  en: {
+    text:
+      `*🧾 ORDER STATUS*\n\n` +
+      `Your order is automatically tracked by our system.\n\n` +
+      `*What to expect:*\n` +
+      `✅ After payment → confirmation webhook fires\n` +
+      `✅ Admin reviews order → clicks Confirm\n` +
+      `✅ You receive receipt + install instructions in DM\n` +
+      `✅ Access granted within minutes\n\n` +
+      `*If you haven't received your access:*\n` +
+      `1. Make sure you have started this bot (/start)\n` +
+      `2. Wait 1-5 minutes after payment\n` +
+      `3. Check your DM inbox\n\n` +
+      `Still stuck? Click *Contact Support* below.`,
+    buttons: [
+      [{ text: '💬 Contact Support', callback_data: 'kb_contact' }],
+      [{ text: '🔙 Back to menu', callback_data: 'kb_menu' }],
+    ],
+  },
+};
+
+const KB_CONTACT = {
+  en: {
+    text:
+      `*💬 CONTACT HUMAN SUPPORT*\n\n` +
+      `Our support team will assist you.\n\n` +
+      `*Response time:* 1-24 hours\n` +
+      `*Languages:* English, Bahasa Melayu\n\n` +
+      `*Please include in your message:*\n` +
+      `• Order ID (if applicable)\n` +
+      `• TradingView username\n` +
+      `• Issue description\n` +
+      `• Screenshots (if any issue)\n\n` +
+      `Type your message below and our team will respond.`,
+    buttons: [[{ text: '🔙 Back to menu', callback_data: 'kb_menu' }]],
+  },
+};
+
+const KB_FALLBACK = {
+  en: {
+    text:
+      `🤔 *I didn't understand that.*\n\n` +
+      `Try one of these options:`,
+    buttons: [
+      [{ text: '📦 How to install indicator', callback_data: 'kb_install' }],
+      [{ text: '🧾 My order status', callback_data: 'kb_order_status' }],
+      [{ text: '💬 Contact human support', callback_data: 'kb_contact' }],
+      [{ text: '📋 Main menu', callback_data: 'kb_menu' }],
+    ],
+  },
+};
+
+// FAQ keyword matching for free text
+function matchFaq(text) {
+  if (!text) return null;
+  const t = text.toLowerCase();
+  // Higher priority patterns first
+  const rules = [
+    { keys: ['install', 'setup', 'add', 'how to', 'indicator', 'pine'], response: 'install' },
+    { keys: ['status', 'order', 'paid', 'received', 'where', 'tracking', 'access'], response: 'order_status' },
+    { keys: ['support', 'help', 'human', 'agent', 'contact', 'issue', 'problem', 'bug', 'error'], response: 'contact' },
+    { keys: ['menu', 'home', 'start', 'main'], response: 'menu' },
+    { keys: ['refund', 'cancel', 'money back'], response: 'contact' },
+    { keys: ['price', 'cost', 'plan', 'pricing'], response: 'contact' },
+  ];
+  for (const r of rules) {
+    for (const k of r.keys) {
+      if (t.includes(k)) return r.response;
+    }
+  }
+  return null;
+}
+
+const KB_MAP = {
+  kb_install: KB_INSTALL,
+  kb_menu: KB_MENU,
+  kb_order_status: KB_ORDER_STATUS,
+  kb_contact: KB_CONTACT,
+};
 
 const PLAN_DISPLAY = {
   flex: 'Flex ($29 · 1 Month)',
@@ -52,11 +189,10 @@ const INSTALL_INSTRUCTIONS = (tvUsername, planName, planDuration) =>
   `• *TP1* — close 50%\n` +
   `• *TP2* — close remaining\n\n` +
   `━━━━━━━━━━━━━━━━━━━━\n\n` +
-  `*📊 WATCH LIVE SIGNALS*\n` +
-  `Join our Mastery Signal community:\n` +
-  `👉 https://t.me/masterysignalcommunity\n\n` +
   `*💬 SUPPORT*\n` +
-  `Reply here or DM @masterysignalbot for any issues.\n\n` +
+  `Got questions? DM @thegoldhunterbot — auto-reply will assist with installation.\n\n` +
+  `Or join our signals community for live trades:\n` +
+  `👉 https://t.me/masterysignalcommunity\n\n` +
   `Happy trading! 🚀`;
 
 // Generate structured receipt as text
@@ -105,40 +241,121 @@ export default async function handler(req) {
     return new Response('bad json', { status: 400 });
   }
 
+  const ghBotToken = process.env.GH_BOT_TOKEN;
+  const ownerChatId = process.env.OWNER_CHAT_ID;
+
+  // ===== ROUTE 1: DM MESSAGE → KNOWLEDGE BASE AUTO-REPLY =====
+  const dmMessage = body.message;
+  if (dmMessage) {
+    const chatId = dmMessage.chat?.id;
+    const text = (dmMessage.text || '').trim();
+    if (!chatId || String(chatId).startsWith('-')) {
+      return new Response('ok', { status: 200 });
+    }
+
+    let response = null;
+
+    // Commands
+    if (text === '/start' || text.startsWith('/start@')) {
+      response = KB_WELCOME.en;
+    } else if (text === '/menu' || text === '/help' || text.startsWith('/menu@') || text.startsWith('/help@')) {
+      response = KB_MENU.en;
+    } else if (text === '/install' || text.startsWith('/install@')) {
+      response = KB_INSTALL.en;
+    } else if (text === '/order' || text === '/status' || text.startsWith('/order@')) {
+      response = KB_ORDER_STATUS.en;
+    } else if (text === '/contact' || text === '/support' || text.startsWith('/contact@')) {
+      response = KB_CONTACT.en;
+    } else if (text) {
+      // FAQ keyword match
+      const match = matchFaq(text);
+      if (match === 'install') response = KB_INSTALL.en;
+      else if (match === 'order_status') response = KB_ORDER_STATUS.en;
+      else if (match === 'contact') response = KB_CONTACT.en;
+      else if (match === 'menu') response = KB_MENU.en;
+      else response = KB_FALLBACK.en;
+    } else {
+      // No text (e.g., sticker, photo) → show menu
+      response = KB_MENU.en;
+    }
+
+    if (response) {
+      await fetch(`https://api.telegram.org/bot${ghBotToken}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: response.text,
+          parse_mode: 'Markdown',
+          disable_web_page_preview: true,
+          reply_markup: response.buttons ? { inline_keyboard: response.buttons } : undefined,
+        }),
+      });
+    }
+    return new Response('ok', { status: 200 });
+  }
+
+  // ===== ROUTE 2: CALLBACK QUERY =====
   const callbackQuery = body.callback_query;
   if (!callbackQuery) {
     return new Response('ok', { status: 200 });
   }
 
-  const callbackId = callbackQuery.id;
+  // Route knowledge base callbacks (from DM menu buttons)
   const data = callbackQuery.data || '';
+  if (data.startsWith('kb_')) {
+    const cbId = callbackQuery.id;
+    const kbResp = KB_MAP[data] || KB_MENU.en;
+    const cbChatId = callbackQuery.message?.chat?.id;
+
+    if (cbId) {
+      await fetch(`https://api.telegram.org/bot${ghBotToken}/answerCallbackQuery`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ callback_query_id: cbId }),
+      });
+    }
+    if (cbChatId) {
+      await fetch(`https://api.telegram.org/bot${ghBotToken}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: cbChatId,
+          text: kbResp.text,
+          parse_mode: 'Markdown',
+          disable_web_page_preview: true,
+          reply_markup: kbResp.buttons ? { inline_keyboard: kbResp.buttons } : undefined,
+        }),
+      });
+    }
+    return new Response('ok', { status: 200 });
+  }
+
+  // Order management callbacks (gh:confirm, gh:cancel, gh:details)
+  if (!data.startsWith('gh:')) {
+    const cbId = callbackQuery.id;
+    if (cbId) {
+      await fetch(`https://api.telegram.org/bot${ghBotToken}/answerCallbackQuery`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ callback_query_id: cbId, text: 'Unknown action' }),
+      });
+    }
+    return new Response('ok', { status: 200 });
+  }
+
+  // Extract common vars for order callbacks
+  const callbackId = callbackQuery.id;
   const from = callbackQuery.from || {};
   const message = callbackQuery.message || {};
   const chatId = message.chat?.id;
-
-  const ghBotToken = process.env.GH_BOT_TOKEN;
   const supabaseUrl = process.env.SUPABASE_URL;
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  if (!ghBotToken || !supabaseUrl || !supabaseKey) {
-    return new Response('server misconfigured', { status: 500 });
-  }
-
   // Parse action
   const parts = data.split(':');
-  const action = parts[0]; // 'gh'
   const subAction = parts[1]; // 'confirm' | 'cancel' | 'details'
-  const orderId = parts.slice(2).join(':'); // UUID might have colons but it's fine
-
-  if (action !== 'gh' || !orderId) {
-    // Answer callback to remove loading indicator
-    await fetch(`https://api.telegram.org/bot${ghBotToken}/answerCallbackQuery`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ callback_query_id: callbackId, text: 'Unknown action' }),
-    });
-    return new Response('ok', { status: 200 });
-  }
+  const orderId = parts.slice(2).join(':');
 
   // Fetch order from Supabase
   const orderRes = await fetch(
