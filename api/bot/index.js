@@ -318,19 +318,22 @@ export default async function handler(req) {
       });
     }
     if (cbChatId) {
+      const msgPayload = {
+        chat_id: cbChatId,
+        text: kbResp.text,
+        parse_mode: 'Markdown',
+        disable_web_page_preview: true,
+      };
+      if (kbResp.buttons) {
+        msgPayload.reply_markup = { inline_keyboard: kbResp.buttons };
+      }
       const sendRes = await fetch(`https://api.telegram.org/bot${ghBotToken}/sendMessage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          chat_id: cbChatId,
-          text: kbResp.text,
-          parse_mode: 'Markdown',
-          disable_web_page_preview: true,
-          reply_markup: kbResp.buttons ? { inline_keyboard: kbResp.buttons } : undefined,
-        }),
+        body: JSON.stringify(msgPayload),
       });
       const sendData = await sendRes.json();
-      console.log('[KB-CALLBACK] sendMessage result', { ok: sendRes.ok, description: sendData.description });
+      console.log('[KB-CALLBACK] sendMessage result', { ok: sendRes.ok, description: sendData.description, msg_id: sendData.result?.message_id });
     }
     return new Response('ok', { status: 200 });
   }
