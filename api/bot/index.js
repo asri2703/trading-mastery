@@ -279,8 +279,9 @@ export default async function handler(req) {
         console.error('getSupportMode error:', e.message);
       }
 
-      // If in support mode + has text → forward to admin
-      if (inSupportMode && text) {
+      // If in support mode + has text → forward to admin (UNLESS exit command)
+      const isExitCommand = text === '/menu' || text === '/help' || text === '/exit' || text.startsWith('/menu@') || text.startsWith('/help@');
+      if (inSupportMode && text && !isExitCommand) {
         const username = dmMessage.from?.username || dmMessage.from?.first_name || 'Unknown';
         const adminMsg =
           `📨 *Support Request*\n\n` +
