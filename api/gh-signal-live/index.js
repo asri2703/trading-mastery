@@ -16,9 +16,9 @@ const TG_BOT_TOKEN = process.env.GH_BOT_TOKEN;
 const TG_CHANNEL_ID = process.env.GH_CHANNEL_ID; // -1004466635373 (Gold Hunter channel)
 const WEBHOOK_SECRET = process.env.GH_SIGNAL_SECRET || 'trading-mastery-2026';
 
-// ALLOWED timeframes (boss filter: M15, M30, H1 only)
-const ALLOWED_TIMEFRAMES = ['15', '30', '60', '240'];
-const TF_LABELS = { '15': 'M15', '30': 'M30', '60': 'H1', '240': 'H4' };
+// ALLOWED timeframes (boss filter: M15, M30, H1 only — boss explicit)
+const ALLOWED_TIMEFRAMES = ['15', '30', '60'];
+const TF_LABELS = { '15': 'M15', '30': 'M30', '60': 'H1' };
 
 // DEDUP: 30-min window per signal hash
 const DEDUP_WINDOW_MS = 30 * 60 * 1000;
