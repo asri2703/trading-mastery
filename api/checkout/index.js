@@ -93,15 +93,13 @@ export default async function handler(req) {
     'metadata[duration_days]': String(PLANS[plan].duration_days),
     'success_url': `${origin}/?paid=1&order=${order.id}`,
     'cancel_url': `${origin}/?canceled=1&order=${order.id}`,
-    // Auto-enable Stripe to send receipt to customer email
     'automatic_tax[enabled]': 'false',
-    'payment_intent_data[receipt_email]': cleanEmail || '',
-    // Note: when receipt_email is empty, Stripe won't send receipt.
-    // Customers without email won't get Stripe receipt (but will get Telegram DM).
+    // Only set receipt_email when email is valid (Stripe rejects empty string)
   };
-  // If email provided, pre-fill the checkout email field
+  // If email provided, pre-fill checkout + auto-send receipt
   if (cleanEmail) {
     stripeParams['customer_email'] = cleanEmail;
+    stripeParams['payment_intent_data[receipt_email]'] = cleanEmail;
   }
   const sessionRes = await fetch('https://api.stripe.com/v1/checkout/sessions', {
     method: 'POST',
