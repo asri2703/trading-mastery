@@ -341,20 +341,47 @@ export default async function handler(req) {
           const supabaseUrl = process.env.SUPABASE_URL;
           const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
           if (supabaseUrl && supabaseKey) {
-            await fetch(`${supabaseUrl}/rest/v1/gh_user_state`, {
-              method: 'POST',
-              headers: {
-                'apikey': supabaseKey,
-                'Authorization': `Bearer ${supabaseKey}`,
-                'Content-Type': 'application/json',
-                'Prefer': 'resolution=merge-duplicates',
-              },
-              body: JSON.stringify({
-                chat_id: String(chatId),
-                support_mode: enableSupportMode,
-                updated_at: new Date().toISOString(),
-              }),
-            });
+            // First check if record exists
+            const checkRes = await fetch(
+              `${supabaseUrl}/rest/v1/gh_user_state?chat_id=eq.${chatId}&select=chat_id`,
+              {
+                headers: {
+                  'apikey': supabaseKey,
+                  'Authorization': `Bearer ${supabaseKey}`,
+                },
+              }
+            );
+            const existing = await checkRes.json();
+            if (Array.isArray(existing) && existing.length > 0) {
+              // Update existing record
+              await fetch(`${supabaseUrl}/rest/v1/gh_user_state?chat_id=eq.${chatId}`, {
+                method: 'PATCH',
+                headers: {
+                  'apikey': supabaseKey,
+                  'Authorization': `Bearer ${supabaseKey}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  support_mode: enableSupportMode,
+                  updated_at: new Date().toISOString(),
+                }),
+              });
+            } else {
+              // Insert new record
+              await fetch(`${supabaseUrl}/rest/v1/gh_user_state`, {
+                method: 'POST',
+                headers: {
+                  'apikey': supabaseKey,
+                  'Authorization': `Bearer ${supabaseKey}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  chat_id: String(chatId),
+                  support_mode: enableSupportMode,
+                  updated_at: new Date().toISOString(),
+                }),
+              });
+            }
           }
         } catch (e) {
           console.error('setSupportMode error:', e.message);
