@@ -291,9 +291,28 @@ export default async function handler(req) {
       }),
     });
 
-    if (installRes.ok && !clientMsgId) {
+    let installMsgId = null;
+    let clientDMSuccess = false;
+    if (installRes.ok) {
       const installData = await installRes.json();
-      clientMsgId = installData.result?.message_id;
+      installMsgId = installData.result?.message_id;
+      clientDMSuccess = true;
+      if (!clientMsgId) clientMsgId = installMsgId;
+    } else {
+      // DM failed — notify owner so they can manually message client
+      const errBody = await installRes.text();
+      console.error(`Client DM failed for ${order.telegram_username}:`, errBody);
+      if (process.env.OWNER_CHAT_ID) {
+        await fetch(`https://api.telegram.org/bot${ghBotToken}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: process.env.OWNER_CHAT_ID,
+            text: `⚠️ *Client DM Failed*\n\nOrder: #${orderShort}\nTV: @${order.tv_username}\nTelegram: @${order.telegram_username}\n\nUser has not started @thegoldhunterbot yet. Please:\n1. Confirm they @start-ed the bot\n2. Manually send them the install instructions\n\nError: ${errBody.substring(0, 200)}`,
+            parse_mode: 'Markdown',
+          }),
+        });
+      }
     }
 
     // Save client_msg_id
