@@ -200,7 +200,7 @@ export default async function handler(req) {
 
   // 5) DM owner (private chat)
   if (ownerChatId) {
-    await fetch(`https://api.telegram.org/bot${ghBotToken}/sendMessage`, {
+    const ownerRes = await fetch(`https://api.telegram.org/bot${ghBotToken}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -208,6 +208,22 @@ export default async function handler(req) {
         text: '🔔 ' + message,
       }),
     });
+
+    if (ownerRes.ok) {
+      const ownerData = await ownerRes.json();
+      const ownerMsgId = ownerData.result?.message_id;
+      if (ownerMsgId) {
+        await fetch(`${supabaseUrl}/rest/v1/gh_orders?id=eq.${orderId}`, {
+          method: 'PATCH',
+          headers: {
+            'apikey': supabaseKey,
+            'Authorization': `Bearer ${supabaseKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ owner_msg_id: ownerMsgId }),
+        });
+      }
+    }
   }
 
   return new Response('ok', { status: 200 });
