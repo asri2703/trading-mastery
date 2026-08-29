@@ -247,11 +247,136 @@ export default async function handler(req) {
   // ===== ROUTE 1: DM MESSAGE → KNOWLEDGE BASE / SUPPORT FORWARD =====
   const dmMessage = body.message;
   if (dmMessage) {
-    await handleDM(dmMessage);
+    const chatId = dmMessage.chat?.id;
+    const text = (dmMessage.text || '').trim();
+    if (chatId && !String(chatId).startsWith('-')) {
+      // Inline knowledge base handling (no separate function)
+      let response = null;
+      let enableSupportMode = false;
+      let disableSupportMode = false;
+
+      // Check if in support mode → forward to admin
+      let inSupportMode = false;
+      try {
+        const supabaseUrl = process.env.SUPABASE_URL;
+        const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+        if (supabaseUrl && supabaseKey) {
+          const modeRes = await fetch(
+            `${supabaseUrl}/rest/v1/gh_user_state?chat_id=eq.${chatId}&select=support_mode`,
+            {
+              headers: {
+                'apikey': supabaseKey,
+                'Authorization': `Bearer ${supabaseKey}`,
+              },
+            }
+          );
+          if (modeRes.ok) {
+            const data = await modeRes.json();
+            inSupportMode = Array.isArray(data) && data.length > 0 && data[0].support_mode === true;
+          }
+        }
+      } catch (e) {
+        console.error('getSupportMode error:', e.message);
+      }
+
+      // If in support mode + has text → forward to admin
+      if (inSupportMode && text) {
+        const username = dmMessage.from?.username || dmMessage.from?.first_name || 'Unknown';
+        const adminMsg =
+          `📨 *Support Request*\n\n` +
+          `From: @${username} (ID: ${chatId})\n` +
+          `Time: ${new Date().toLocaleString('en-US', { timeZone: 'Asia/Kuala_Lumpur' })}\n\n` +
+          `*Message:*\n${text}`;
+        try {
+          await fetch(`https://api.telegram.org/bot${ghBotToken}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat_id: ownerChatId, text: adminMsg, parse_mode: 'Markdown' }),
+          });
+          await fetch(`https://api.telegram.org/bot${ghBotToken}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              chat_id: chatId,
+              text: `✅ *Message sent to support*\n\nYour message has been forwarded to @asripapa. Reply within 1-24 hours.\n\n*Type /menu to exit support mode.*`,
+              parse_mode: 'Markdown',
+              reply_markup: { inline_keyboard: [[{ text: '🚪 Exit Support Mode', callback_data: 'kb_menu' }]] },
+            }),
+          });
+        } catch (e) {
+          console.error('Forward error:', e.message);
+        }
+        return new Response('ok', { status: 200 });
+      }
+
+      // Standard commands
+      if (text === '/start' || text.startsWith('/start@')) {
+        response = KB_WELCOME.en;
+      } else if (text === '/menu' || text === '/help' || text.startsWith('/menu@') || text.startsWith('/help@')) {
+        disableSupportMode = true;
+        response = KB_MENU.en;
+      } else if (text === '/install' || text.startsWith('/install@')) {
+        response = KB_INSTALL.en;
+      } else if (text === '/order' || text === '/status' || text.startsWith('/order@')) {
+        response = KB_ORDER_STATUS.en;
+      } else if (text === '/contact' || text === '/support' || text.startsWith('/contact@')) {
+        enableSupportMode = true;
+        response = KB_CONTACT.en;
+      } else if (text) {
+        const match = matchFaq(text);
+        if (match === 'install') response = KB_INSTALL.en;
+        else if (match === 'order_status') response = KB_ORDER_STATUS.en;
+        else if (match === 'contact') {
+          enableSupportMode = true;
+          response = KB_CONTACT.en;
+        } else if (match === 'menu') response = KB_MENU.en;
+        else response = KB_FALLBACK.en;
+      } else {
+        response = KB_MENU.en;
+      }
+
+      // Update support mode if needed
+      if (enableSupportMode || disableSupportMode) {
+        try {
+          const supabaseUrl = process.env.SUPABASE_URL;
+          const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+          if (supabaseUrl && supabaseKey) {
+            await fetch(`${supabaseUrl}/rest/v1/gh_user_state`, {
+              method: 'POST',
+              headers: {
+                'apikey': supabaseKey,
+                'Authorization': `Bearer ${supabaseKey}`,
+                'Content-Type': 'application/json',
+                'Prefer': 'resolution=merge-duplicates',
+              },
+              body: JSON.stringify({
+                chat_id: String(chatId),
+                support_mode: enableSupportMode,
+                updated_at: new Date().toISOString(),
+              }),
+            });
+          }
+        } catch (e) {
+          console.error('setSupportMode error:', e.message);
+        }
+      }
+
+      if (response) {
+        await fetch(`https://api.telegram.org/bot${ghBotToken}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: chatId,
+            text: response.text,
+            parse_mode: 'Markdown',
+            disable_web_page_preview: true,
+            reply_markup: response.buttons ? { inline_keyboard: response.buttons } : undefined,
+          }),
+        });
+      }
+    }
     return new Response('ok', { status: 200 });
   }
-
-  // ===== ADMIN SUPPORT FORWARDING =====
 // When user clicks "Contact Support" we put them in "support mode"
 // Next text message they send will be forwarded to admin @asripapa
 const SUPPORT_MODE_FILE = '/tmp/gh_bot_support_mode.json'; // not used in edge; use Supabase instead
