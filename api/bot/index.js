@@ -267,37 +267,50 @@ const setSupportMode = async (chatId, on) => {
   const supabaseUrl = process.env.SUPABASE_URL;
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!supabaseUrl || !supabaseKey) return;
-  await fetch(`${supabaseUrl}/rest/v1/gh_user_state?chat_id=eq.${chatId}`, {
-    method: 'POST',
-    headers: {
-      'apikey': supabaseKey,
-      'Authorization': `Bearer ${supabaseKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      chat_id: String(chatId),
-      support_mode: on,
-      updated_at: new Date().toISOString(),
-    }),
-  });
+  try {
+    const res = await fetch(`${supabaseUrl}/rest/v1/gh_user_state`, {
+      method: 'POST',
+      headers: {
+        'apikey': supabaseKey,
+        'Authorization': `Bearer ${supabaseKey}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'resolution=merge-duplicates',
+      },
+      body: JSON.stringify({
+        chat_id: String(chatId),
+        support_mode: on,
+        updated_at: new Date().toISOString(),
+      }),
+    });
+    if (!res.ok) {
+      console.error('setSupportMode error:', res.status, await res.text());
+    }
+  } catch (e) {
+    console.error('setSupportMode exception:', e.message);
+  }
 };
 
 const getSupportMode = async (chatId) => {
   const supabaseUrl = process.env.SUPABASE_URL;
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!supabaseUrl || !supabaseKey) return false;
-  const res = await fetch(
-    `${supabaseUrl}/rest/v1/gh_user_state?chat_id=eq.${chatId}&select=support_mode`,
-    {
-      headers: {
-        'apikey': supabaseKey,
-        'Authorization': `Bearer ${supabaseKey}`,
-      },
-    }
-  );
-  if (!res.ok) return false;
-  const data = await res.json();
-  return data.length > 0 && data[0].support_mode === true;
+  try {
+    const res = await fetch(
+      `${supabaseUrl}/rest/v1/gh_user_state?chat_id=eq.${chatId}&select=support_mode`,
+      {
+        headers: {
+          'apikey': supabaseKey,
+          'Authorization': `Bearer ${supabaseKey}`,
+        },
+      }
+    );
+    if (!res.ok) return false;
+    const data = await res.json();
+    return Array.isArray(data) && data.length > 0 && data[0].support_mode === true;
+  } catch (e) {
+    console.error('getSupportMode exception:', e.message);
+    return false;
+  }
 };
 
 // Handle DM messages
