@@ -777,7 +777,7 @@
       </div>
       <div class="sale-popup-actions">
         <a href="#plans" class="sale-popup-btn sale-popup-btn-primary" id="salePopupClaim">Claim the deal →</a>
-        <a href="#plans" class="sale-popup-btn sale-popup-btn-ghost">See the plans</a>
+        <a href="#plans" class="sale-popup-btn sale-popup-btn-ghost" id="salePopupPlans">See the plans</a>
       </div>
     </div>
   </div>
@@ -1242,6 +1242,7 @@
     const secsEl = document.getElementById('saleSecs');
     const closeBtn = document.getElementById('salePopupClose');
     const claimBtn = document.getElementById('salePopupClaim');
+    const plansBtn = document.getElementById('salePopupPlans');
 
     function pad(n) { return String(Math.max(0, n)).padStart(2, '0'); }
 
@@ -1279,7 +1280,13 @@
     overlay.addEventListener('click', (e) => {
       if (e.target === overlay) close();
     });
-    if (claimBtn) claimBtn.addEventListener('click', close);
+    // CTA buttons — close popup AND allow scroll to #plans
+    function ctaClick(e) {
+      close();
+      // Let the anchor href="#plans" trigger native scroll
+    }
+    if (claimBtn) claimBtn.addEventListener('click', ctaClick);
+    if (plansBtn) plansBtn.addEventListener('click', ctaClick);
 
     // ESC to close
     document.addEventListener('keydown', (e) => {
