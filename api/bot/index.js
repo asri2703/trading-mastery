@@ -341,12 +341,16 @@ export default async function handler(req) {
         response = KB_MENU.en;
       }
 
-      // Update support mode if needed
-      if (enableSupportMode || disableSupportMode) {
+      // Update support mode if needed (also upserts telegram_username)
+      if (enableSupportMode || disableSupportMode || dmMessage.from?.username) {
         try {
           const supabaseUrl = process.env.SUPABASE_URL;
           const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
           if (supabaseUrl && supabaseKey) {
+            const tgUsername = dmMessage.from?.username
+              ? String(dmMessage.from.username).toLowerCase()
+              : null;
+
             // First check if record exists
             const checkRes = await fetch(
               `${supabaseUrl}/rest/v1/gh_user_state?chat_id=eq.${chatId}&select=chat_id`,
@@ -368,7 +372,8 @@ export default async function handler(req) {
                   'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                  support_mode: enableSupportMode,
+                  support_mode: enableSupportMode || false,
+                  telegram_username: tgUsername,
                   updated_at: new Date().toISOString(),
                 }),
               });
@@ -383,7 +388,8 @@ export default async function handler(req) {
                 },
                 body: JSON.stringify({
                   chat_id: String(chatId),
-                  support_mode: enableSupportMode,
+                  support_mode: enableSupportMode || false,
+                  telegram_username: tgUsername,
                   updated_at: new Date().toISOString(),
                 }),
               });
