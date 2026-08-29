@@ -20,22 +20,78 @@ const PLAN_EMOJI = {
   pro: '🥇',
 };
 
-// Client tutorial - steps to add Trading Mastery indicator
-const TUTORIAL_TEXT = (tvUsername, planName) =>
+// Install instructions for TradingView invite-only access
+const INSTALL_INSTRUCTIONS = (tvUsername, planName, planDuration) =>
   `🎉 *Welcome to Trading Mastery!*\n\n` +
-  `Your ${planName} is now active. Here's how to add the Trading Mastery indicator to your TradingView chart:\n\n` +
-  `*Step 1*: Open TradingView\n` +
-  `https://www.tradingview.com/\n\n` +
-  `*Step 2*: Search for "TRADING MASTERY" in Indicators (top toolbar, fx icon)\n\n` +
-  `*Step 3*: When you find the indicator, click the star ⭐ to add to favorites\n\n` +
-  `*Step 4*: The indicator will appear on your chart automatically\n\n` +
-  `*Step 5*: Pick your instrument (XAUUSD, BTCUSD, US30, etc.) and timeframe\n` +
-  `• Scalping → M15\n` +
-  `• Intraday → H1\n\n` +
-  `*Step 6*: Wait for signal — entry, SL, TP1, TP2 will appear on chart with dashboard confirmations\n\n` +
-  `*Signal Score*: Only enter if score is 5/7.0 or higher.\n\n` +
-  `📊 Watch live signals in @masterysignalcommunity\n\n` +
-  `Need help? Reply here.`;
+  `Your ${planName} is now ACTIVE (${planDuration}).\n\n` +
+  `━━━━━━━━━━━━━━━━━━━━\n\n` +
+  `*📦 WHAT YOU GET*\n\n` +
+  `✅ Trading Mastery indicator (invite-only access)\n` +
+  `✅ Entry, SL, TP1, TP2 auto-display\n` +
+  `✅ Signal Score 0-7 (only trade ≥5/7.0)\n` +
+  `✅ Multi-timeframe support\n` +
+  `✅ All instruments (XAUUSD, BTCUSD, US30, FX, etc.)\n\n` +
+  `━━━━━━━━━━━━━━━━━━━━\n\n` +
+  `*🔓 HOW TO ADD TO TRADINGVIEW*\n\n` +
+  `*Step 1 — Your TradingView username*\n` +
+  `Username *@${tvUsername}* has been added to our invite-only Pine Script list.\n\n` +
+  `*Step 2 — Open TradingView*\n` +
+  `👉 https://www.tradingview.com/\n\n` +
+  `*Step 3 — Add the indicator*\n` +
+  `1. Click the *fx (Indicators)* button at top toolbar\n` +
+  `2. Click *"Invite-only scripts"* tab\n` +
+  `3. Search for *"Trading Mastery"* or *"TRADING-MASTERY"*\n` +
+  `4. Click the indicator to add to your chart\n\n` +
+  `*Step 4 — Pick instrument & timeframe*\n` +
+  `• XAUUSD / BTCUSD / US30 / FX pairs\n` +
+  `• Scalping → M15 | Intraday → H1 | Swing → H4\n\n` +
+  `*Step 5 — Wait for signal*\n` +
+  `When dashboard confirms *score ≥5/7.0*, follow:\n` +
+  `• *Entry* — open position\n` +
+  `• *SL* — set stop loss\n` +
+  `• *TP1* — close 50%\n` +
+  `• *TP2* — close remaining\n\n` +
+  `━━━━━━━━━━━━━━━━━━━━\n\n` +
+  `*📊 WATCH LIVE SIGNALS*\n` +
+  `Join our Mastery Signal community:\n` +
+  `👉 https://t.me/masterysignalcommunity\n\n` +
+  `*💬 SUPPORT*\n` +
+  `Reply here or DM @masterysignalbot for any issues.\n\n` +
+  `Happy trading! 🚀`;
+
+// Generate structured receipt as text
+const RECEIPT_TEXT = (order, planDisplay, planDuration, processedAt, expiresAt) => {
+  const createdAt = new Date(order.created_at).toLocaleString('en-US', { timeZone: 'Asia/Kuala_Lumpur' });
+  const paidAt = order.paid_at ? new Date(order.paid_at).toLocaleString('en-US', { timeZone: 'Asia/Kuala_Lumpur' }) : 'N/A';
+  const formattedProcessed = new Date(processedAt).toLocaleString('en-US', { timeZone: 'Asia/Kuala_Lumpur' });
+  const formattedExpires = new Date(expiresAt).toLocaleString('en-US', { timeZone: 'Asia/Kuala_Lumpur' });
+  const orderShort = order.id.substring(0, 8).toUpperCase();
+
+  return `🧾 *RECEIPT — TRADING MASTERY*\n\n` +
+    `━━━━━━━━━━━━━━━━━━━━\n` +
+    `Order ID: #${orderShort}\n` +
+    `Status: ✅ PAID & ACTIVATED\n` +
+    `━━━━━━━━━━━━━━━━━━━━\n\n` +
+    `*📦 PLAN*\n` +
+    `${planDisplay}\n` +
+    `Duration: ${planDuration}\n\n` +
+    `*💰 PAYMENT*\n` +
+    `Amount: $${order.amount_usd} USD\n` +
+    `Order Date: ${createdAt}\n` +
+    `Paid: ${paidAt}\n` +
+    `Processed: ${formattedProcessed}\n\n` +
+    `*👤 CUSTOMER*\n` +
+    `TradingView: @${order.tv_username}\n` +
+    `Telegram: @${order.telegram_username}\n\n` +
+    `*📅 ACCESS*\n` +
+    `Activated: ${formattedProcessed}\n` +
+    `Expires: ${formattedExpires}\n\n` +
+    `━━━━━━━━━━━━━━━━━━━━\n` +
+    `Thank you for choosing Trading Mastery!\n` +
+    `Questions? DM @masterysignalbot`;
+};
+
+const TUTORIAL_TEXT = INSTALL_INSTRUCTIONS;
 
 export default async function handler(req) {
   if (req.method !== 'POST') {
@@ -197,23 +253,47 @@ export default async function handler(req) {
       }),
     });
 
-    // DM client with tutorial
-    const clientText = TUTORIAL_TEXT(order.tv_username, planDisplay);
-    const clientRes = await fetch(`https://api.telegram.org/bot${ghBotToken}/sendMessage`, {
+    // DM client: 1) Receipt 2) Install instructions
+    const planDuration = durationDays + ' days';
+    const receiptText = RECEIPT_TEXT(order, planDisplay, planDuration, now, expiresAt);
+    const installText = INSTALL_INSTRUCTIONS(order.tv_username, planDisplay, planDuration);
+
+    let clientMsgId = null;
+
+    // Send receipt first
+    const receiptRes = await fetch(`https://api.telegram.org/bot${ghBotToken}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         chat_id: `@${order.telegram_username}`,
-        text: clientText,
+        text: receiptText,
         parse_mode: 'Markdown',
         disable_web_page_preview: true,
       }),
     });
 
-    let clientMsgId = null;
-    if (clientRes.ok) {
-      const clientData = await clientRes.json();
-      clientMsgId = clientData.result?.message_id;
+    if (receiptRes.ok) {
+      const receiptData = await receiptRes.json();
+      clientMsgId = receiptData.result?.message_id;
+    }
+
+    // Small delay then send install instructions
+    await new Promise(r => setTimeout(r, 500));
+
+    const installRes = await fetch(`https://api.telegram.org/bot${ghBotToken}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: `@${order.telegram_username}`,
+        text: installText,
+        parse_mode: 'Markdown',
+        disable_web_page_preview: true,
+      }),
+    });
+
+    if (installRes.ok && !clientMsgId) {
+      const installData = await installRes.json();
+      clientMsgId = installData.result?.message_id;
     }
 
     // Save client_msg_id
