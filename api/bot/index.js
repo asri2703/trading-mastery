@@ -22,7 +22,7 @@ const KB_WELCOME = {
       [{ text: '📦 How to install indicator', callback_data: 'kb_install' }],
       [{ text: '🧾 My order status', callback_data: 'kb_order_status' }],
       [{ text: '💬 Contact human support', callback_data: 'kb_contact' }],
-      [{ text: '🧾 Manage Invoices', url: 'https://gh-landing-bay.vercel.app/?portal=open' }],
+      [{ text: '🧾 Manage Invoices', url: 'https://tradingmastery.com.my/?portal=open' }],
     ],
   },
 };
