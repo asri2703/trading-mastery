@@ -215,7 +215,9 @@ const RECEIPT_TEXT = (order, planDisplay, planDuration, processedAt, expiresAt) 
     `Amount: $${order.amount_usd} USD\n` +
     `Order Date: ${createdAt}\n` +
     `Paid: ${paidAt}\n` +
-    `Processed: ${formattedProcessed}\n\n` +
+    `Processed: ${formattedProcessed}\n` +
+    (order.email ? `Stripe Receipt: ${order.email}\n` : `Stripe Receipt: (no email provided)\n`) +
+    `\n` +
     `*👤 CUSTOMER*\n` +
     `TradingView: @${order.tv_username}\n` +
     `Telegram: @${order.telegram_username}\n\n` +
@@ -224,7 +226,10 @@ const RECEIPT_TEXT = (order, planDisplay, planDuration, processedAt, expiresAt) 
     `Expires: ${formattedExpires}\n\n` +
     `━━━━━━━━━━━━━━━━━━━━\n` +
     `Thank you for choosing Trading Mastery!\n` +
-    `Questions? DM @masterysignalbot`;
+    (order.email
+      ? `A Stripe receipt was sent to ${order.email} instantly.\n`
+      : `Tip: Add your email next time to get instant Stripe receipts.\n`) +
+    `Questions? DM @thegoldhunterbot`;
 };
 
 const TUTORIAL_TEXT = INSTALL_INSTRUCTIONS;

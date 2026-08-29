@@ -24,7 +24,7 @@ export default async function handler(req) {
     return new Response(JSON.stringify({ error: 'invalid json' }), { status: 400 });
   }
 
-  const { plan, tv_username, telegram } = body;
+  const { plan, tv_username, telegram, email } = body;
   if (!PLANS[plan] || !tv_username || !telegram) {
     return new Response(JSON.stringify({ error: 'missing fields', required: ['plan', 'tv_username', 'telegram'] }), { status: 400 });
   }
@@ -32,6 +32,12 @@ export default async function handler(req) {
   // Sanitize inputs
   const cleanTv = String(tv_username).trim().replace(/^@/, '').toLowerCase();
   const cleanTg = String(telegram).trim().replace(/^@/, '').toLowerCase();
+  // Email is optional but recommended
+  const cleanEmail = email ? String(email).trim().toLowerCase() : null;
+  // Basic email validation
+  if (cleanEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+    return new Response(JSON.stringify({ error: 'invalid email format' }), { status: 400 });
+  }
   if (!cleanTv || !cleanTg) {
     return new Response(JSON.stringify({ error: 'invalid username' }), { status: 400 });
   }
@@ -60,6 +66,7 @@ export default async function handler(req) {
       amount_usd: PLANS[plan].price / 100,
       tv_username: cleanTv,
       telegram_username: cleanTg,
+      email: cleanEmail,
       status: 'pending',
     }),
   });
@@ -71,28 +78,38 @@ export default async function handler(req) {
   const [order] = await orderRes.json();
 
   // 2) Create Stripe Checkout Session (one-time payment, NOT subscription)
+  const stripeParams = {
+    mode: 'payment', // ONE-TIME payment, no recurring
+    'line_items[0][price_data][currency]': 'usd',
+    'line_items[0][price_data][product_data][name]': `Trading Mastery — ${PLANS[plan].name}`,
+    'line_items[0][price_data][product_data][description]': `Indicator access for TradingView @${cleanTv} (${PLANS[plan].duration_days} days)`,
+    'line_items[0][price_data][unit_amount]': String(PLANS[plan].price),
+    'line_items[0][quantity]': '1',
+    // Metadata for webhook to identify order
+    'metadata[order_id]': order.id,
+    'metadata[plan]': plan,
+    'metadata[tv_username]': cleanTv,
+    'metadata[telegram]': cleanTg,
+    'metadata[duration_days]': String(PLANS[plan].duration_days),
+    'success_url': `${origin}/?paid=1&order=${order.id}`,
+    'cancel_url': `${origin}/?canceled=1&order=${order.id}`,
+    // Auto-enable Stripe to send receipt to customer email
+    'automatic_tax[enabled]': 'false',
+    'payment_intent_data[receipt_email]': cleanEmail || '',
+    // Note: when receipt_email is empty, Stripe won't send receipt.
+    // Customers without email won't get Stripe receipt (but will get Telegram DM).
+  };
+  // If email provided, pre-fill the checkout email field
+  if (cleanEmail) {
+    stripeParams['customer_email'] = cleanEmail;
+  }
   const sessionRes = await fetch('https://api.stripe.com/v1/checkout/sessions', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${stripeKey}`,
       'Content-Type': 'application/x-www-form-urlencoded',
     },
-    body: new URLSearchParams({
-      mode: 'payment', // ONE-TIME payment, no recurring
-      'line_items[0][price_data][currency]': 'usd',
-      'line_items[0][price_data][product_data][name]': `Trading Mastery — ${PLANS[plan].name}`,
-      'line_items[0][price_data][product_data][description]': `Indicator access for TradingView @${cleanTv} (${PLANS[plan].duration_days} days)`,
-      'line_items[0][price_data][unit_amount]': String(PLANS[plan].price),
-      'line_items[0][quantity]': '1',
-      // Metadata for webhook to identify order
-      'metadata[order_id]': order.id,
-      'metadata[plan]': plan,
-      'metadata[tv_username]': cleanTv,
-      'metadata[telegram]': cleanTg,
-      'metadata[duration_days]': String(PLANS[plan].duration_days),
-      'success_url': `${origin}/?paid=1&order=${order.id}`,
-      'cancel_url': `${origin}/?canceled=1&order=${order.id}`,
-    }),
+    body: new URLSearchParams(stripeParams),
   });
 
   if (!sessionRes.ok) {
