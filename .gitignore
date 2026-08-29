@@ -1,2 +1,28 @@
+# Secrets — NEVER commit
 /gh-secrets/
+/secrets/
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+*.p12
+*.pfx
+credentials.json
+service-account*.json
+
+# Build artifacts
 .vercel
+/node_modules
+/dist
+/build
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
