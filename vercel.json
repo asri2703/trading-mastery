@@ -6,6 +6,7 @@
     { "source": "/api/checkout", "destination": "/api/checkout/index.js" },
     { "source": "/api/webhook", "destination": "/api/webhook/index.js" },
     { "source": "/api/bot", "destination": "/api/bot/index.js" },
-    { "source": "/api/customer-portal", "destination": "/api/customer-portal/index.js" }
+    { "source": "/api/customer-portal", "destination": "/api/customer-portal/index.js" },
+    { "source": "/api/gh-signal", "destination": "/api/gh-signal/index.js" }
   ]
 }
