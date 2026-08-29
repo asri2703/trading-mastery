@@ -306,7 +306,9 @@ export default async function handler(req) {
   console.log('[KB-CALLBACK]', { data, from: callbackQuery.from?.username });
   if (data.startsWith('kb_')) {
     const cbId = callbackQuery.id;
-    const kbResp = KB_MAP[data] || KB_MENU.en;
+    // KB sections are { en: { text, buttons } } — extract .en
+    const kbSection = KB_MAP[data];
+    const kbResp = (kbSection && kbSection.en) || KB_MENU.en;
     const cbChatId = callbackQuery.message?.chat?.id;
     console.log('[KB-CALLBACK] responding', { cbChatId, kbResp_text_length: kbResp.text?.length });
 
@@ -317,7 +319,7 @@ export default async function handler(req) {
         body: JSON.stringify({ callback_query_id: cbId }),
       });
     }
-    if (cbChatId) {
+    if (cbChatId && kbResp && kbResp.text) {
       const msgPayload = {
         chat_id: cbChatId,
         text: kbResp.text,
@@ -334,6 +336,8 @@ export default async function handler(req) {
       });
       const sendData = await sendRes.json();
       console.log('[KB-CALLBACK] sendMessage result', { ok: sendRes.ok, description: sendData.description, msg_id: sendData.result?.message_id });
+    } else {
+      console.log('[KB-CALLBACK] skip send', { cbChatId, hasResp: !!kbResp, hasText: !!(kbResp && kbResp.text) });
     }
     return new Response('ok', { status: 200 });
   }
