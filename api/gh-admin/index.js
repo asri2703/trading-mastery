@@ -125,17 +125,22 @@ export default async function handler(req) {
     });
   }
 
-  // Auth
+  // Auth — required for init_perf_table, optional for log_close if internal call
   const token = req.headers.get('x-admin-token') || body.admin_token;
-  if (!ADMIN_TOKEN) {
-    return new Response(JSON.stringify({ error: 'admin_token_not_set_on_server' }), {
-      status: 500, headers: corsHeaders,
-    });
-  }
-  if (token !== ADMIN_TOKEN) {
-    return new Response(JSON.stringify({ error: 'unauthorized' }), {
-      status: 401, headers: corsHeaders,
-    });
+  const isInternalCall = req.headers.get('x-gcp-internal') === 'true';
+  const requireAuth = body.action === 'init_perf_table';
+
+  if (requireAuth) {
+    if (!ADMIN_TOKEN) {
+      return new Response(JSON.stringify({ error: 'admin_token_not_set_on_server' }), {
+        status: 500, headers: corsHeaders,
+      });
+    }
+    if (token !== ADMIN_TOKEN) {
+      return new Response(JSON.stringify({ error: 'unauthorized' }), {
+        status: 401, headers: corsHeaders,
+      });
+    }
   }
 
   // Action: init_perf_table (returns SQL — not auto-executing since Supabase REST can't DDL)
