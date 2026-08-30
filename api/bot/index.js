@@ -31,9 +31,60 @@ const KB_MENU = {
   en: {
     text: `📋 *MAIN MENU*\n\nHow can I help you today?`,
     buttons: [
-      [{ text: '📦 How to install indicator', callback_data: 'kb_install' }],
-      [{ text: '🧾 My order status', callback_data: 'kb_order_status' }],
+      [{ text: '🛒 Get Indicator — 47% Summer Sale', url: 'https://tradingmastery.com.my/' }],
+      [{ text: '📦 My Orders', callback_data: 'kb_orders_menu' }],
+      [{ text: '📊 Performance', callback_data: 'kb_performance' }],
       [{ text: '💬 Contact human support', callback_data: 'kb_contact' }],
+    ],
+  },
+};
+
+const KB_ORDERS_MENU = {
+  en: {
+    text: `🧾 *MY ORDERS*\n\nSelect an option:`,
+    buttons: [
+      [{ text: '🆕 Check Order Status', callback_data: 'kb_order_status' }],
+      [{ text: '📦 How to Install Indicator', callback_data: 'kb_install' }],
+      [{ text: '🔙 Back to Main Menu', callback_data: 'kb_menu' }],
+    ],
+  },
+};
+
+const KB_PERFORMANCE = {
+  en: {
+    text:
+      `*📊 PERFORMANCE*\n\n` +
+      `Live win rate + signal results updated automatically.\n\n` +
+      `*Tracking:* TP1 / TP2 / TP3 / SL hits\n` +
+      `*Source:* Real-time webhook from indicator\n` +
+      `*Update:* Every close event\n\n` +
+      `_Loading latest stats below..._`,
+    buttons: [
+      [{ text: '🔄 Refresh', callback_data: 'kb_performance' }],
+      [{ text: '🔙 Back to Main Menu', callback_data: 'kb_menu' }],
+    ],
+  },
+};
+
+const KB_INDICATOR = {
+  en: {
+    text:
+      `*🛒 GET INDICATOR*\n\n` +
+      `Get summer sales *47% discount* — limited time!\n\n` +
+      `*3 plans available:*\n` +
+      `• Flex — $29 (1 Month)\n` +
+      `• Plus — $75 (3 Months · $25/mo)\n` +
+      `• Pro — $132 (6 Months · $22/mo)\n\n` +
+      `*Includes:*\n` +
+      `✅ Real-time BUY/SELL signals\n` +
+      `✅ TP1/TP2/TP3 targets\n` +
+      `✅ Risk management (SL)\n` +
+      `✅ Win rate tracking\n` +
+      `✅ Telegram channel access\n\n` +
+      `Click button below to view plans & checkout:`,
+    buttons: [
+      [{ text: '🛒 Get Indicator — 47% Summer Sale', url: 'https://tradingmastery.com.my/' }],
+      [{ text: '🔙 Back to Main Menu', callback_data: 'kb_menu' }],
     ],
   },
 };
@@ -67,7 +118,8 @@ const KB_INSTALL = {
       [
         { text: '📖 Full Tutorial', url: TUTORIAL_URL },
       ],
-      [{ text: '🔙 Back to menu', callback_data: 'kb_menu' }],
+      [{ text: '🔙 Back to Orders', callback_data: 'kb_orders_menu' }],
+      [{ text: '📋 Main Menu', callback_data: 'kb_menu' }],
     ],
   },
 };
@@ -89,7 +141,8 @@ const KB_ORDER_STATUS = {
       `Still stuck? Click *Contact Support* below.`,
     buttons: [
       [{ text: '💬 Contact Support', callback_data: 'kb_contact' }],
-      [{ text: '🔙 Back to menu', callback_data: 'kb_menu' }],
+      [{ text: '🔙 Back to Orders', callback_data: 'kb_orders_menu' }],
+      [{ text: '📋 Main Menu', callback_data: 'kb_menu' }],
     ],
   },
 };
@@ -107,7 +160,7 @@ const KB_CONTACT = {
       `• Issue description\n` +
       `• Screenshots (if any issue)\n\n` +
       `Type your message below and our team will respond.`,
-    buttons: [[{ text: '🔙 Back to menu', callback_data: 'kb_menu' }]],
+    buttons: [[{ text: '🔙 Back to Main Menu', callback_data: 'kb_menu' }]],
   },
 };
 
@@ -117,8 +170,9 @@ const KB_FALLBACK = {
       `🤔 *I didn't understand that.*\n\n` +
       `Try one of these options:`,
     buttons: [
-      [{ text: '📦 How to install indicator', callback_data: 'kb_install' }],
-      [{ text: '🧾 My order status', callback_data: 'kb_order_status' }],
+      [{ text: '🛒 Get Indicator — 47% Summer Sale', url: 'https://tradingmastery.com.my/' }],
+      [{ text: '📦 My Orders', callback_data: 'kb_orders_menu' }],
+      [{ text: '📊 Performance', callback_data: 'kb_performance' }],
       [{ text: '💬 Contact human support', callback_data: 'kb_contact' }],
       [{ text: '📋 Main menu', callback_data: 'kb_menu' }],
     ],
@@ -131,12 +185,14 @@ function matchFaq(text) {
   const t = text.toLowerCase();
   // Higher priority patterns first
   const rules = [
+    { keys: ['performance', 'win rate', 'winrate', 'result', 'results', 'stats', 'statistic'], response: 'performance' },
+    { keys: ['orders', 'my orders', 'myorder'], response: 'orders_menu' },
+    { keys: ['buy', 'purchase', 'pricing', 'plan', 'price', 'cost', 'discount', 'sale'], response: 'indicator' },
     { keys: ['install', 'setup', 'add', 'how to', 'indicator', 'pine'], response: 'install' },
     { keys: ['status', 'order', 'paid', 'received', 'where', 'tracking', 'access'], response: 'order_status' },
     { keys: ['support', 'help', 'human', 'agent', 'contact', 'issue', 'problem', 'bug', 'error'], response: 'contact' },
     { keys: ['menu', 'home', 'start', 'main'], response: 'menu' },
     { keys: ['refund', 'cancel', 'money back'], response: 'contact' },
-    { keys: ['price', 'cost', 'plan', 'pricing'], response: 'contact' },
   ];
   for (const r of rules) {
     for (const k of r.keys) {
@@ -151,7 +207,89 @@ const KB_MAP = {
   kb_menu: KB_MENU,
   kb_order_status: KB_ORDER_STATUS,
   kb_contact: KB_CONTACT,
+  kb_orders_menu: KB_ORDERS_MENU,
+  kb_performance: KB_PERFORMANCE,
+  kb_indicator: KB_INDICATOR,
 };
+
+// ===== Performance Stats =====
+async function buildPerformanceStats() {
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  try {
+    if (!supabaseUrl || !supabaseKey) {
+      return `*📊 PERFORMANCE*\n\n_Supabase not configured._\n\nPerformance tracking will populate once signals hit TP/SL via webhook.`;
+    }
+
+    // Fetch all closed signals from gh_performance table
+    const res = await fetch(
+      `${supabaseUrl}/rest/v1/gh_performance?select=direction,close_result,pips,signal_time,close_time&order=close_time.desc&limit=200`,
+      {
+        headers: {
+          'apikey': supabaseKey,
+          'Authorization': `Bearer ${supabaseKey}`,
+        },
+      }
+    );
+
+    if (!res.ok) {
+      const errTxt = await res.text().catch(() => '');
+      console.log('[PERF] supabase error', res.status, errTxt.substring(0, 200));
+      return `*📊 PERFORMANCE*\n\n_Database not yet populated._\n\nOnce signals hit TP/SL via TradingView webhook, stats will appear here automatically.`;
+    }
+
+    const rows = await res.json();
+    if (!rows || rows.length === 0) {
+      return `*📊 PERFORMANCE*\n\n_No closed signals yet._\n\nWaiting for first TP/SL hit from indicator webhook...\n\n_Stats will populate automatically._`;
+    }
+
+    // Calculate stats
+    const tp1 = rows.filter(r => r.close_result === 'tp1').length;
+    const tp2 = rows.filter(r => r.close_result === 'tp2').length;
+    const tp3 = rows.filter(r => r.close_result === 'tp3').length;
+    const sl = rows.filter(r => r.close_result === 'sl').length;
+    const wins = tp1 + tp2 + tp3;
+    const total = wins + sl;
+    const winRate = total > 0 ? ((wins / total) * 100).toFixed(1) : '0.0';
+    const totalPips = rows.reduce((s, r) => s + (parseFloat(r.pips) || 0), 0);
+
+    // Per direction
+    const buys = rows.filter(r => r.direction === 'BUY');
+    const sells = rows.filter(r => r.direction === 'SELL');
+    const buyWins = buys.filter(r => r.close_result !== 'sl').length;
+    const sellWins = sells.filter(r => r.close_result !== 'sl').length;
+    const buyWinRate = buys.length > 0 ? ((buyWins / buys.length) * 100).toFixed(1) : '0.0';
+    const sellWinRate = sells.length > 0 ? ((sellWins / sells.length) * 100).toFixed(1) : '0.0';
+
+    // Last 5 closed
+    const last5 = rows.slice(0, 5).map(r => {
+      const arrow = r.close_result === 'sl' ? '🔴' : '🟢';
+      const label = r.close_result.toUpperCase();
+      const dt = r.close_time ? new Date(r.close_time).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) : '';
+      return `${arrow} ${r.direction} ${label} (${r.pips > 0 ? '+' : ''}${parseFloat(r.pips).toFixed(0)}p) — ${dt}`;
+    }).join('\n');
+
+    return (
+      `*📊 PERFORMANCE — LIVE STATS*\n\n` +
+      `*Overall (${total} closed signals):*\n` +
+      `🟢 Wins: *${wins}*  🔴 SL: *${sl}*\n` +
+      `📈 *Win Rate: ${winRate}%*\n` +
+      `💰 *Total Pips: ${totalPips > 0 ? '+' : ''}${totalPips.toFixed(0)}p*\n\n` +
+      `*By Result:*\n` +
+      `🎯 TP1: *${tp1}*  🎯 TP2: *${tp2}*  🎯 TP3: *${tp3}*\n\n` +
+      `*By Direction:*\n` +
+      `🟢 BUY: ${buyWins}/${buys.length} (${buyWinRate}%)\n` +
+      `🔴 SELL: ${sellWins}/${sells.length} (${sellWinRate}%)\n\n` +
+      `*Last 5 closed:*\n` +
+      `${last5}\n\n` +
+      `_Updated: ${new Date().toLocaleString('en-MY', { timeZone: 'Asia/Kuala_Lumpur' })}_`
+    );
+  } catch (e) {
+    console.log('[PERF] exception', e.message);
+    return `*📊 PERFORMANCE*\n\n_Error loading stats: ${e.message}_`;
+  }
+}
 
 const PLAN_DISPLAY = {
   flex: 'Flex ($29 · 1 Month)',
@@ -345,6 +483,9 @@ export default async function handler(req) {
         const match = matchFaq(text);
         if (match === 'install') response = KB_INSTALL.en;
         else if (match === 'order_status') response = KB_ORDER_STATUS.en;
+        else if (match === 'orders_menu') response = KB_ORDERS_MENU.en;
+        else if (match === 'performance') response = KB_PERFORMANCE.en;
+        else if (match === 'indicator') response = KB_INDICATOR.en;
         else if (match === 'contact') {
           enableSupportMode = true;
           response = KB_CONTACT.en;
@@ -608,10 +749,39 @@ async function handleDM(dmMessage) {
   console.log('[KB-CALLBACK]', { data, from: callbackQuery.from?.username });
   if (data.startsWith('kb_')) {
     const cbId = callbackQuery.id;
+    const cbChatId = callbackQuery.message?.chat?.id;
+
+    // Special handler: Performance (fetch live data from Supabase)
+    if (data === 'kb_performance' && cbChatId) {
+      const perfText = await buildPerformanceStats();
+      const perfKb = { ...KB_PERFORMANCE.en, text: perfText };
+      const cbId2 = cbId;
+
+      if (cbId2) {
+        await fetch(`https://api.telegram.org/bot${ghBotToken}/answerCallbackQuery`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ callback_query_id: cbId2 }),
+        });
+      }
+      const msgPayload = {
+        chat_id: cbChatId,
+        text: perfText,
+        parse_mode: 'Markdown',
+        disable_web_page_preview: true,
+        reply_markup: { inline_keyboard: KB_PERFORMANCE.en.buttons },
+      };
+      await fetch(`https://api.telegram.org/bot${ghBotToken}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(msgPayload),
+      });
+      return new Response('ok', { status: 200 });
+    }
+
     // KB sections are { en: { text, buttons } } — extract .en
     const kbSection = KB_MAP[data];
     const kbResp = (kbSection && kbSection.en) || KB_MENU.en;
-    const cbChatId = callbackQuery.message?.chat?.id;
     console.log('[KB-CALLBACK] responding', { cbChatId, kbResp_text_length: kbResp.text?.length });
 
     if (cbId) {

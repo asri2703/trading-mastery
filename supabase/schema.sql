@@ -142,3 +142,43 @@ ORDER BY a.expires_at ASC;
 COMMENT ON TABLE gh_orders IS 'All GH purchase attempts and their Stripe payment status';
 COMMENT ON TABLE gh_access IS 'Granted TradingView indicator access (post-processed orders)';
 COMMENT ON TABLE gh_activity IS 'Activity log for bot interactions, status changes, etc';
+
+-- =====================================================
+-- PERFORMANCE: Track closed signals (TP1/TP2/TP3/SL hits)
+-- Populated by GCP Cloud Run webhook on close events
+-- =====================================================
+CREATE TABLE IF NOT EXISTS gh_performance (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  -- Signal info
+  signal_id TEXT,                    -- hash from webhook
+  pair TEXT NOT NULL,
+  timeframe TEXT NOT NULL,
+  direction TEXT NOT NULL CHECK (direction IN ('BUY', 'SELL')),
+  signal_name TEXT,                  -- e.g. 'GAMMA BUY'
+  -- Prices
+  entry NUMERIC(10, 2) NOT NULL,
+  sl NUMERIC(10, 2) NOT NULL,
+  tp1 NUMERIC(10, 2) NOT NULL,
+  tp2 NUMERIC(10, 2),
+  tp3 NUMERIC(10, 2),
+  close_price NUMERIC(10, 2),
+  -- Result
+  close_result TEXT NOT NULL CHECK (close_result IN ('tp1', 'tp2', 'tp3', 'sl', 'be')),
+  pips NUMERIC(10, 1) NOT NULL DEFAULT 0,
+  -- Score
+  score NUMERIC(3, 1),
+  -- Timestamps
+  signal_time TIMESTAMPTZ,
+  close_time TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_gh_perf_close_result ON gh_performance(close_result);
+CREATE INDEX IF NOT EXISTS idx_gh_perf_pair ON gh_performance(pair);
+CREATE INDEX IF NOT EXISTS idx_gh_perf_close_time ON gh_performance(close_time DESC);
+CREATE INDEX IF NOT EXISTS idx_gh_perf_direction ON gh_performance(direction);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_gh_perf_signal_id ON gh_performance(signal_id);
+
+-- RLS: only service_role can access
+ALTER TABLE gh_performance ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON gh_performance FROM anon, authenticated;
