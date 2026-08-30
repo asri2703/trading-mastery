@@ -6,10 +6,23 @@
 //      gh:cancel:<order_id>  → mark cancelled
 //      gh:details:<order_id> → show order details
 //   2) DM messages to bot → auto-reply with knowledge base
-//      /start, /menu, /install, free text → FAQ keyword match
-//      Internal callbacks: install, menu, order_status, contact_support
+//      Commands: /start /menu /orders /performance /renewal /install /contact
+//      Free text → FAQ keyword match
+//      Menu sections:
+//        kb_welcome     — /start message
+//        kb_menu        — main menu
+//        kb_orders_menu — My Orders sub-menu
+//        kb_install     — install instructions
+//        kb_order_status — order tracking
+//        kb_performance  — live win rate + stats (Supabase gh_performance)
+//        kb_renewal      — subscription status (Supabase gh_access)
+//        kb_indicator    — Get Indicator landing page promo
+//        kb_contact      — support mode entry
 
 export const config = { runtime: 'edge' };
+
+// Tutorial URL — declared early so KB_INSTALL can reference it
+const TUTORIAL_URL = 'https://telegra.ph/How-to-Install-Trading-Mastery-Indicator--Quick-Tutorial-08-29';
 
 // === KNOWLEDGE BASE FOR DM AUTO-REPLY ===
 const KB_WELCOME = {
@@ -19,10 +32,11 @@ const KB_WELCOME = {
       `I'm here to help you with your *Trading Mastery* indicator.\n\n` +
       `*What can I help you with?*`,
     buttons: [
-      [{ text: '📦 How to install indicator', callback_data: 'kb_install' }],
-      [{ text: '🧾 My order status', callback_data: 'kb_order_status' }],
+      [{ text: '🛒 Get Indicator — 47% Summer Sale', url: 'https://tradingmastery.com.my/' }],
+      [{ text: '📦 My Orders', callback_data: 'kb_orders_menu' }],
+      [{ text: '📊 Performance', callback_data: 'kb_performance' }],
+      [{ text: '🔔 Renewal Reminder', callback_data: 'kb_renewal' }],
       [{ text: '💬 Contact human support', callback_data: 'kb_contact' }],
-      [{ text: '🧾 Manage Invoices', url: 'https://tradingmastery.com.my/?portal=open' }],
     ],
   },
 };
@@ -34,6 +48,7 @@ const KB_MENU = {
       [{ text: '🛒 Get Indicator — 47% Summer Sale', url: 'https://tradingmastery.com.my/' }],
       [{ text: '📦 My Orders', callback_data: 'kb_orders_menu' }],
       [{ text: '📊 Performance', callback_data: 'kb_performance' }],
+      [{ text: '🔔 Renewal Reminder', callback_data: 'kb_renewal' }],
       [{ text: '💬 Contact human support', callback_data: 'kb_contact' }],
     ],
   },
@@ -61,6 +76,23 @@ const KB_PERFORMANCE = {
       `_Loading latest stats below..._`,
     buttons: [
       [{ text: '🔄 Refresh', callback_data: 'kb_performance' }],
+      [{ text: '🔙 Back to Main Menu', callback_data: 'kb_menu' }],
+    ],
+  },
+};
+
+const KB_RENEWAL = {
+  en: {
+    text:
+      `*🔔 RENEWAL REMINDER*\n\n` +
+      `Check your subscription status & upcoming renewals.\n\n` +
+      `*What you'll see:*\n` +
+      `• Active plan + expiry date\n` +
+      `• Days remaining\n` +
+      `• Quick renewal link\n\n` +
+      `_Loading your subscription..._`,
+    buttons: [
+      [{ text: '🔄 Refresh', callback_data: 'kb_renewal' }],
       [{ text: '🔙 Back to Main Menu', callback_data: 'kb_menu' }],
     ],
   },
@@ -173,6 +205,7 @@ const KB_FALLBACK = {
       [{ text: '🛒 Get Indicator — 47% Summer Sale', url: 'https://tradingmastery.com.my/' }],
       [{ text: '📦 My Orders', callback_data: 'kb_orders_menu' }],
       [{ text: '📊 Performance', callback_data: 'kb_performance' }],
+      [{ text: '🔔 Renewal Reminder', callback_data: 'kb_renewal' }],
       [{ text: '💬 Contact human support', callback_data: 'kb_contact' }],
       [{ text: '📋 Main menu', callback_data: 'kb_menu' }],
     ],
@@ -185,6 +218,7 @@ function matchFaq(text) {
   const t = text.toLowerCase();
   // Higher priority patterns first
   const rules = [
+    { keys: ['renewal', 'renew', 'expire', 'expiry', 'subscription', 'extend'], response: 'renewal' },
     { keys: ['performance', 'win rate', 'winrate', 'result', 'results', 'stats', 'statistic'], response: 'performance' },
     { keys: ['orders', 'my orders', 'myorder'], response: 'orders_menu' },
     { keys: ['buy', 'purchase', 'pricing', 'plan', 'price', 'cost', 'discount', 'sale'], response: 'indicator' },
@@ -210,6 +244,7 @@ const KB_MAP = {
   kb_orders_menu: KB_ORDERS_MENU,
   kb_performance: KB_PERFORMANCE,
   kb_indicator: KB_INDICATOR,
+  kb_renewal: KB_RENEWAL,
 };
 
 // ===== Performance Stats =====
@@ -291,6 +326,125 @@ async function buildPerformanceStats() {
   }
 }
 
+// ===== Renewal Status =====
+async function buildRenewalStatus(telegramUsername, chatId) {
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  try {
+    if (!supabaseUrl || !supabaseKey) {
+      return `*🔔 RENEWAL*\n\n_Supabase not configured._`;
+    }
+
+    // Identify user — try by telegram_username first, then chat_id via gh_user_state
+    let username = telegramUsername;
+    if (!username && chatId) {
+      const stateRes = await fetch(
+        `${supabaseUrl}/rest/v1/gh_user_state?chat_id=eq.${chatId}&select=telegram_username`,
+        {
+          headers: {
+            'apikey': supabaseKey,
+            'Authorization': `Bearer ${supabaseKey}`,
+          },
+        }
+      );
+      if (stateRes.ok) {
+        const stateRows = await stateRes.json();
+        if (stateRows && stateRows[0]?.telegram_username) {
+          username = stateRows[0].telegram_username;
+        }
+      }
+    }
+
+    if (!username) {
+      return (
+        `*🔔 RENEWAL REMINDER*\n\n` +
+        `⚠️ _No Telegram username detected._\n\n` +
+        `Please send me a message first (type anything) so I can link your account.\n\n` +
+        `Then come back here to check your subscription status.`
+      );
+    }
+
+    // Strip leading @ if present
+    const cleanUsername = username.replace(/^@/, '');
+
+    // Query gh_access for active subscriptions (use the view for computed days_until_expiry)
+    const res = await fetch(
+      `${supabaseUrl}/rest/v1/gh_access?select=plan,telegram_username,granted_at,expires_at&telegram_username=eq.${encodeURIComponent(cleanUsername)}&active=eq.true&order=expires_at.desc&limit=5`,
+      {
+        headers: {
+          'apikey': supabaseKey,
+          'Authorization': `Bearer ${supabaseKey}`,
+        },
+      }
+    );
+
+    if (!res.ok) {
+      const errTxt = await res.text().catch(() => '');
+      console.log('[RENEWAL] supabase error', res.status, errTxt.substring(0, 200));
+      return `*🔔 RENEWAL*\n\n_Database error. Try again later._`;
+    }
+
+    const rows = await res.json();
+    if (!rows || rows.length === 0) {
+      return (
+        `*🔔 RENEWAL REMINDER*\n\n` +
+        `📭 *No active subscription found*\n\n` +
+        `You don't have an active indicator access.\n\n` +
+        `*Get started:*\n` +
+        `🛒 Click below to view plans (47% off):`
+      );
+    }
+
+    // Build display
+    const planLabels = { flex: '🥉 Flex', plus: '🥈 Plus', pro: '🥇 Pro' };
+    const now = new Date();
+    const subs = rows.map(r => {
+      const expires = new Date(r.expires_at);
+      const daysLeft = Math.ceil((expires - now) / (1000 * 60 * 60 * 24));
+      const granted = new Date(r.granted_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+      const expiresStr = expires.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+      let statusEmoji = '🟢';
+      let statusLabel = 'Active';
+      if (daysLeft <= 0) { statusEmoji = '🔴'; statusLabel = 'Expired'; }
+      else if (daysLeft <= 7) { statusEmoji = '🟡'; statusLabel = `${daysLeft} day${daysLeft !== 1 ? 's' : ''} left`; }
+      else if (daysLeft <= 30) { statusEmoji = '🟠'; statusLabel = `${daysLeft} days left`; }
+      else { statusEmoji = '🟢'; statusLabel = `${daysLeft} days left`; }
+
+      return {
+        ...r,
+        daysLeft,
+        granted,
+        expiresStr,
+        statusEmoji,
+        statusLabel,
+        planLabel: planLabels[r.plan] || r.plan,
+      };
+    });
+
+    const summary = subs.map(s => (
+      `${s.statusEmoji} *${s.planLabel}*\n` +
+      `   Expires: ${s.expiresStr}\n` +
+      `   Status: ${s.statusLabel}\n` +
+      `   Granted: ${s.granted}`
+    )).join('\n\n');
+
+    // Renewal link (customer portal)
+    const portalUrl = `https://tradingmastery.com.my/?portal=open`;
+
+    return (
+      `*🔔 RENEWAL REMINDER*\n\n` +
+      `Hi *@${cleanUsername}*! Here are your active subscriptions:\n\n` +
+      `${summary}\n\n` +
+      `*Need to renew?*\n` +
+      `Click below to manage your subscription:`
+    );
+  } catch (e) {
+    console.log('[RENEWAL] exception', e.message);
+    return `*🔔 RENEWAL*\n\n_Error loading: ${e.message}_`;
+  }
+}
+
 const PLAN_DISPLAY = {
   flex: 'Flex ($29 · 1 Month)',
   plus: 'Plus ($75 · 3 Months · $25/mo)',
@@ -304,8 +458,6 @@ const PLAN_EMOJI = {
 };
 
 // Install instructions for TradingView invite-only access
-const TUTORIAL_URL = 'https://telegra.ph/How-to-Install-Trading-Mastery-Indicator--Quick-Tutorial-08-29';
-
 const INSTALL_INSTRUCTIONS = (tvUsername, planName, planDuration) =>
   `🎉 *Welcome to Trading Mastery!*\n\n` +
   `Your ${planName} is now ACTIVE (${planDuration}).\n\n` +
@@ -476,6 +628,12 @@ export default async function handler(req) {
         response = KB_INSTALL.en;
       } else if (text === '/order' || text === '/status' || text.startsWith('/order@')) {
         response = KB_ORDER_STATUS.en;
+      } else if (text === '/orders' || text.startsWith('/orders@')) {
+        response = KB_ORDERS_MENU.en;
+      } else if (text === '/performance' || text.startsWith('/performance@')) {
+        response = KB_PERFORMANCE.en;
+      } else if (text === '/renewal' || text.startsWith('/renewal@')) {
+        response = KB_RENEWAL.en;
       } else if (text === '/contact' || text === '/support' || text.startsWith('/contact@')) {
         enableSupportMode = true;
         response = KB_CONTACT.en;
@@ -486,6 +644,7 @@ export default async function handler(req) {
         else if (match === 'orders_menu') response = KB_ORDERS_MENU.en;
         else if (match === 'performance') response = KB_PERFORMANCE.en;
         else if (match === 'indicator') response = KB_INDICATOR.en;
+        else if (match === 'renewal') response = KB_RENEWAL.en;
         else if (match === 'contact') {
           enableSupportMode = true;
           response = KB_CONTACT.en;
@@ -702,6 +861,12 @@ async function handleDM(dmMessage) {
     response = KB_INSTALL.en;
   } else if (text === '/order' || text === '/status' || text.startsWith('/order@')) {
     response = KB_ORDER_STATUS.en;
+  } else if (text === '/orders' || text.startsWith('/orders@')) {
+    response = KB_ORDERS_MENU.en;
+  } else if (text === '/performance' || text.startsWith('/performance@')) {
+    response = KB_PERFORMANCE.en;
+  } else if (text === '/renewal' || text.startsWith('/renewal@')) {
+    response = KB_RENEWAL.en;
   } else if (text === '/contact' || text === '/support' || text.startsWith('/contact@')) {
     // Enable support mode
     await setSupportMode(chatId, true);
@@ -711,6 +876,10 @@ async function handleDM(dmMessage) {
     const match = matchFaq(text);
     if (match === 'install') response = KB_INSTALL.en;
     else if (match === 'order_status') response = KB_ORDER_STATUS.en;
+    else if (match === 'orders_menu') response = KB_ORDERS_MENU.en;
+    else if (match === 'performance') response = KB_PERFORMANCE.en;
+    else if (match === 'indicator') response = KB_INDICATOR.en;
+    else if (match === 'renewal') response = KB_RENEWAL.en;
     else if (match === 'contact') {
       await setSupportMode(chatId, true);
       response = KB_CONTACT.en;
@@ -770,6 +939,42 @@ async function handleDM(dmMessage) {
         parse_mode: 'Markdown',
         disable_web_page_preview: true,
         reply_markup: { inline_keyboard: KB_PERFORMANCE.en.buttons },
+      };
+      await fetch(`https://api.telegram.org/bot${ghBotToken}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(msgPayload),
+      });
+      return new Response('ok', { status: 200 });
+    }
+
+    // Special handler: Renewal Reminder (fetch user subscription from Supabase)
+    if (data === 'kb_renewal' && cbChatId) {
+      const cbFrom = callbackQuery.from || {};
+      const tgUsername = cbFrom.username || null;
+      const renewText = await buildRenewalStatus(tgUsername, cbChatId);
+
+      if (cbId) {
+        await fetch(`https://api.telegram.org/bot${ghBotToken}/answerCallbackQuery`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ callback_query_id: cbId }),
+        });
+      }
+
+      // Buttons: Renewal link goes to website portal, plus back/refresh
+      const renewButtons = [
+        [{ text: '🛒 Manage Subscription', url: 'https://tradingmastery.com.my/?portal=open' }],
+        [{ text: '🔄 Refresh', callback_data: 'kb_renewal' }],
+        [{ text: '🔙 Back to Main Menu', callback_data: 'kb_menu' }],
+      ];
+
+      const msgPayload = {
+        chat_id: cbChatId,
+        text: renewText,
+        parse_mode: 'Markdown',
+        disable_web_page_preview: true,
+        reply_markup: { inline_keyboard: renewButtons },
       };
       await fetch(`https://api.telegram.org/bot${ghBotToken}/sendMessage`, {
         method: 'POST',
