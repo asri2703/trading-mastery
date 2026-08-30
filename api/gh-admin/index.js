@@ -125,12 +125,12 @@ export default async function handler(req) {
     });
   }
 
-  // Auth — required for init_perf_table, optional for log_close if internal call
+  // Auth — for now, only init_perf_table needs token. log_close is open for GCP internal calls.
   const token = req.headers.get('x-admin-token') || body.admin_token;
-  const isInternalCall = req.headers.get('x-gcp-internal') === 'true';
   const requireAuth = body.action === 'init_perf_table';
 
   if (requireAuth) {
+    const ADMIN_TOKEN = process.env.ADMIN_TOKEN || process.env.GH_ADMIN_TOKEN;
     if (!ADMIN_TOKEN) {
       return new Response(JSON.stringify({ error: 'admin_token_not_set_on_server' }), {
         status: 500, headers: corsHeaders,
