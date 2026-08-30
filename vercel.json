@@ -5,9 +5,7 @@
   "rewrites": [
     { "source": "/api/checkout", "destination": "/api/checkout/index.js" },
     { "source": "/api/webhook", "destination": "/api/webhook/index.js" },
-    { "source": "/api/bot", "destination": "/api/bot/index.js" },
     { "source": "/api/customer-portal", "destination": "/api/customer-portal/index.js" },
-    { "source": "/api/gh-signal", "destination": "/api/gh-signal/index.js" },
     { "source": "/api/gh-signal-test", "destination": "/api/gh-signal-test/index.js" },
     { "source": "/api/gh-signal-live", "destination": "/api/gh-signal-live/index.js" },
     { "source": "/api/gh-admin", "destination": "/api/gh-admin/index.js" }
